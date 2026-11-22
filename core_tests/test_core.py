@@ -152,6 +152,34 @@ def test_suggest_episodes_unticks_specials_and_unnumbered():
                       "a7": True, "a8": True}
 
 
+def test_suggest_episodes_strips_the_artist_prefix():
+    """Music Assistant names albums "<artist> - <album>" (Andreas's HA, 2026-11-22)."""
+    titles = [
+        "Die drei ??? Kids - Adventskalender - 24 Tage voller Spannung!",
+        "Die drei ??? Kids - Nacht unter Wölfen / Night among Wolves",
+        "Die drei ??? Kids - Folge 104: Teuflische Küche",
+        "Die drei ??? Kids - Mini-Fall/Der unsichtbare Dieb (Mini-Fall 09)",
+        "Die drei ??? Kids - Magische Fälle",
+        "Die drei ??? Kids - 080/Gefährlicher Nebel",
+        "Die drei ??? Kids - 001/Panik im Paradies",
+        "Die drei ??? Kids - 002/Radio Rocky Beach",
+    ]
+    episodes = suggest_episodes([{"uri": f"u{i}", "title": t} for i, t in enumerate(titles)])
+    assert [e.title for e in episodes][:3] == [
+        "Adventskalender - 24 Tage voller Spannung!", "Nacht unter Wölfen / Night among Wolves",
+        "Folge 104: Teuflische Küche"]
+    assert [e.number for e in episodes] == [None, None, 104, None, None, 80, 1, 2]
+    assert [e.included for e in episodes] == [False, False, True, False, False, True, True, True]
+    assert number_order(episodes) == ["u6", "u7", "u5", "u2"]
+
+
+def test_shared_prefix_only_when_most_share_it():
+    from custom_components.speldosa.core.models import strip_shared_prefix
+
+    assert strip_shared_prefix(["A - x", "B - y", "C"]) == ["A - x", "B - y", "C"]
+    assert strip_shared_prefix(["Bamse - x", "Bamse - y", "z"]) == ["x", "y", "z"]
+
+
 def test_suggest_episodes_without_numbers_keeps_all_but_specials():
     items = [{"uri": "b1", "title": "Bamses nya sagor"}, {"uri": "b2", "title": "Bamse på skattjakt"},
              {"uri": "b3", "title": "Bamses bästa sånger och lieder"}]

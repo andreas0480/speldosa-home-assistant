@@ -13,8 +13,11 @@ from .const import PANEL_COMPONENT, PANEL_URL_PATH, STATIC_URL
 
 FRONTEND_DIR = Path(__file__).parent / "frontend"
 BUNDLE = "speldosa-panel.js"
+ICONS = "speldosa-icons.js"
+SIDEBAR_ICON = "speldosa:logo"
 _STATIC_KEY = "speldosa_static_registered"
 _PANEL_KEY = "speldosa_panel_registered"
+_ICONS_KEY = "speldosa_icons_url"
 
 
 def _version() -> str:
@@ -34,12 +37,16 @@ async def async_register_panel(hass: HomeAssistant) -> None:
             [StaticPathConfig(STATIC_URL, str(FRONTEND_DIR), cache_headers=False)]
         )
     version = await hass.async_add_executor_job(_version)
+    # The Speldosa mark as icon "speldosa:logo", loaded on every page so the sidebar can show it.
+    icons_url = f"{STATIC_URL}/{ICONS}?v={version}"
+    hass.data[_ICONS_KEY] = icons_url
+    frontend.add_extra_js_url(hass, icons_url)
     await panel_custom.async_register_panel(
         hass,
         frontend_url_path=PANEL_URL_PATH,
         webcomponent_name=PANEL_COMPONENT,
         sidebar_title="Speldosa",
-        sidebar_icon="mdi:music-box-outline",
+        sidebar_icon=SIDEBAR_ICON,
         module_url=f"{STATIC_URL}/{BUNDLE}?v={version}",
         require_admin=False,
         config={},
@@ -48,5 +55,7 @@ async def async_register_panel(hass: HomeAssistant) -> None:
 
 def async_remove_panel(hass: HomeAssistant) -> None:
     hass.data.pop(_PANEL_KEY, None)
+    if (icons_url := hass.data.pop(_ICONS_KEY, None)) is not None:
+        frontend.remove_extra_js_url(hass, icons_url)
     if PANEL_URL_PATH in hass.data.get(frontend.DATA_PANELS, {}):
         frontend.async_remove_panel(hass, PANEL_URL_PATH)

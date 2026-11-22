@@ -15,7 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import music
 from .const import DOMAIN, EPISODES_MAX_AGE_S, SIGNAL_CHANGED
 from .core import SERIES_MODES, Card, Episode, PlayMode, default_mode, merge_episodes, modes_for, suggest_episodes
-from .core.models import MEDIA_TYPES
+from .core.models import MEDIA_TYPES, strip_shared_prefix
 
 if TYPE_CHECKING:
     from . import SpeldosaData
@@ -191,7 +191,12 @@ async def _refresh_episodes(hass: HomeAssistant, uid: str, player: str) -> None:
 
 
 def _untitled(episodes: list[Episode]) -> bool:
-    return bool(episodes) and all(e.title == e.uri for e in episodes)
+    """A list never chosen with real titles: migrated from store version 2 (bare URIs), or from 0.3.0 to 0.3.2,
+    where titles kept the artist prefix and no episode numbers were found. Such lists are suggested again."""
+    if not episodes:
+        return False
+    titles = [e.title for e in episodes]
+    return all(e.title == e.uri for e in episodes) or strip_shared_prefix(titles) != titles
 
 
 def async_refresh_stale_episodes(hass: HomeAssistant, player: str) -> None:

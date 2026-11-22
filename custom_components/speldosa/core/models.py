@@ -85,17 +85,32 @@ class Episode:
     image: str | None = None
 
 
+def strip_shared_prefix(titles: list[str]) -> list[str]:
+    """Drop a prefix most titles share, such as the artist in "Die drei ??? Kids - 035/Im Wilden Westen".
+
+    Music Assistant's album list names each album "<artist> - <album>" (seen 2026-11-22).
+    """
+    heads = [t.split(" - ", 1)[0] for t in titles if " - " in t]
+    if not heads:
+        return titles
+    head = max(set(heads), key=heads.count)
+    if heads.count(head) * 5 < len(titles) * 3:  # fewer than 60 % share it
+        return titles
+    prefix = head + " - "
+    return [t[len(prefix):] if t.startswith(prefix) else t for t in titles]
+
+
 def suggest_episodes(items: list[dict[str, Any]]) -> list[Episode]:
     """Episodes with a suggested selection.
 
     Advent calendars, soundtracks, minis and similar are left out. When most albums carry an episode number,
     only numbered albums are ticked. `items` are {"uri", "title", "image"} in the provider's order.
     """
+    items = [i for i in items if i.get("uri")]
+    titles = strip_shared_prefix([i.get("title") or i["uri"] for i in items])
     episodes = [
-        Episode(uri=i["uri"], title=i.get("title") or i["uri"], number=episode_number(i.get("title") or ""),
-                image=i.get("image"))
-        for i in items
-        if i.get("uri")
+        Episode(uri=i["uri"], title=title, number=episode_number(title), image=i.get("image"))
+        for i, title in zip(items, titles)
     ]
     numbered = sum(1 for e in episodes if e.number is not None)
     mostly_numbered = bool(episodes) and numbered * 2 >= len(episodes)

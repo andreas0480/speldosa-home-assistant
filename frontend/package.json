@@ -1,6 +1,6 @@
 {
   "name": "speldosa-panel",
-  "version": "0.3.1",
+  "version": "0.3.3",
   "private": true,
   "description": "The Speldosa page in the Home Assistant sidebar: link cards to Music Assistant content.",
   "license": "Apache-2.0",

@@ -70,7 +70,11 @@ async def test_options_set_speaker_and_window(hass: HomeAssistant, box, player, 
 
 async def test_panel_registered(hass: HomeAssistant, box, player, services) -> None:
     await _setup(hass, box)
-    assert "speldosa" in hass.data["frontend_panels"]
+    panel = hass.data["frontend_panels"]["speldosa"]
+    assert panel.sidebar_icon == "speldosa:logo"
+    from homeassistant.components.frontend import DATA_EXTRA_MODULE_URL
+
+    assert any("speldosa-icons.js" in url for url in hass.data[DATA_EXTRA_MODULE_URL].urls)
 
 
 async def test_two_boxes_set_up_together(hass: HomeAssistant, box, player, services) -> None:
@@ -472,6 +476,24 @@ async def test_migrated_untitled_album_list_is_refetched_with_suggestion(
     card = _store(hass).get("D")
     assert [(e.title, e.included) for e in card.episodes] == [
         ("001/Panik im Paradies", True), ("Adventskalender - 24 Tage", False)]
+
+
+async def test_prefixed_album_list_is_suggested_again(hass: HomeAssistant, box, player, services) -> None:
+    """0.3.0 to 0.3.2 kept "<artist> - " in titles and found no numbers: such a list is suggested again."""
+    items = [{"uri": "a1", "title": "Kids - 001/Panik", "image": None},
+             {"uri": "a2", "title": "Kids - Magische Fälle", "image": None},
+             {"uri": "a3", "title": "Kids - 002/Radio", "image": None}]
+    with patch("custom_components.speldosa.music.async_episodes", return_value=items):
+        await _setup(hass, box)
+        _store(hass).set(Card("D", "Kids", "spotify://artist/x", "artist", PlayMode.RANDOM_ALBUM,
+                              episodes=[Episode(i["uri"], i["title"], None, True) for i in items]))
+        from custom_components.speldosa.websocket import async_refresh_stale_episodes
+
+        async_refresh_stale_episodes(hass, PLAYER)
+        await hass.async_block_till_done()
+    card = _store(hass).get("D")
+    assert [(e.title, e.number, e.included) for e in card.episodes] == [
+        ("001/Panik", 1, True), ("Magische Fälle", None, False), ("002/Radio", 2, True)]
 
 
 async def test_store_migrates_version_1(hass: HomeAssistant, hass_storage, box, player, services) -> None:
