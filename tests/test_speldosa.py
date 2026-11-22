@@ -187,6 +187,22 @@ async def test_place_lift_put_back(hass: HomeAssistant, box, player, services) -
     assert len(services.named("music_assistant", "play_media")) == 1
 
 
+async def test_other_music_in_between_is_not_resumed(hass: HomeAssistant, box, player, services) -> None:
+    """Found 2026-11-22: a playlist card put back after a parent played and paused something else in Music
+    Assistant resumed that other thing. It must start the card's own playlist again."""
+    await _setup(hass, box)
+    _store(hass).set(Card("U1", "Bedtime", "spotify://playlist/p1", "playlist", PlayMode.FROM_START))
+    await _place(hass, "U1")
+    await _place(hass, "none")
+    assert hass.states.get(PLAYER).state == "paused"
+    services.set_player("playing", content="spotify://album/parents-music")  # played from Music Assistant
+    services.set_player("paused")
+    await hass.async_block_till_done()
+    await _place(hass, "U1")
+    assert services.named("media_player", "media_play") == []
+    assert services.named("music_assistant", "play_media")[-1]["media_id"] == "spotify://playlist/p1"
+
+
 async def test_window_zero_restarts_from_start(hass: HomeAssistant, box, player, services) -> None:
     await _setup(hass, box, {CONF_PLAYER: PLAYER, CONF_RESUME_WINDOW: 0})
     _store(hass).set(Card("U1", "Bedtime", "spotify://playlist/p1", "playlist", PlayMode.FROM_START))

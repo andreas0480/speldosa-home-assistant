@@ -110,6 +110,10 @@ class BoxController:
         state = self.hass.states.get(self.player)
         return state.state if state else None
 
+    def player_content(self) -> str | None:
+        state = self.hass.states.get(self.player)
+        return state.attributes.get("media_content_id") if state else None
+
     def player_name(self) -> str:
         state = self.hass.states.get(self.player)
         return (state.attributes.get("friendly_name") if state else None) or self.player
@@ -186,7 +190,13 @@ class BoxController:
         self.hass.bus.async_fire(EVENT_CARD, {"entry_id": self.entry_id, "uid": uid, "placed": True})
         card = self.store.get(uid)
         decision = on_placed(
-            card, uid, self.state, self.player_state(), time.time(), resume_window=self.resume_window_s
+            card,
+            uid,
+            self.state,
+            self.player_state(),
+            time.time(),
+            resume_window=self.resume_window_s,
+            player_content=self.player_content(),
         )
         self.state = decision.state
         await self._run(decision.actions, card)
@@ -194,7 +204,7 @@ class BoxController:
     async def async_card_lifted(self) -> None:
         uid = self.state.active_uid
         self.hass.bus.async_fire(EVENT_CARD, {"entry_id": self.entry_id, "uid": uid, "placed": False})
-        decision = on_lifted(self.state, self.player_state(), time.time())
+        decision = on_lifted(self.state, self.player_state(), time.time(), self.player_content())
         self.state = decision.state
         await self._run(decision.actions, self.store.get(uid) if uid else None)
 

@@ -53,6 +53,9 @@ class BoxState:
     active_uid: str | None = None
     paused_uid: str | None = None
     lifted_at: float | None = None
+    # What the speaker was playing when the card was lifted. Pressing play again is only right if the speaker is
+    # still paused on that; someone may have played something else in between (found 2026-11-22).
+    paused_content: str | None = None
 
 
 @dataclass
@@ -114,8 +117,12 @@ def on_placed(
     *,
     resume_window: float = DEFAULT_RESUME_WINDOW_S,
     rng: random.Random | None = None,
+    player_content: str | None = None,
 ) -> Decision:
-    """A card was put on the box."""
+    """A card was put on the box.
+
+    player_content is what the speaker has loaded now (its media content id).
+    """
     rng = rng or random.Random()
     if card is None:
         return Decision(
@@ -125,7 +132,8 @@ def on_placed(
     new_state = BoxState(active_uid=uid)
     playing = [Action("status", status=STATUS_PLAYING)]
     if _within_window(state, uid, now, resume_window):
-        if player_state == "paused":
+        untouched = state.paused_content is not None and player_content == state.paused_content
+        if player_state == "paused" and untouched:
             return Decision([Action("resume")] + playing, new_state)
         if card.position is not None and card.mode not in SERIES_MODES:
             return Decision(_play(card.uri, card.media_type, position=card.position) + playing, new_state)
@@ -150,8 +158,10 @@ def on_placed(
     return Decision(actions + playing, new_state)
 
 
-def on_lifted(state: BoxState, player_state: str | None, now: float) -> Decision:
-    """The card was lifted off the box."""
+def on_lifted(
+    state: BoxState, player_state: str | None, now: float, player_content: str | None = None
+) -> Decision:
+    """The card was lifted off the box. player_content is what the speaker has loaded (its media content id)."""
     uid = state.active_uid
     if uid is None or player_state not in ("playing", "paused"):
         return Decision([Action("status", status=STATUS_IDLE)], BoxState())
@@ -160,7 +170,7 @@ def on_lifted(state: BoxState, player_state: str | None, now: float) -> Decision
         actions.append(Action("pause"))
     return Decision(
         actions + [Action("status", status=STATUS_PAUSED)],
-        BoxState(active_uid=None, paused_uid=uid, lifted_at=now),
+        BoxState(active_uid=None, paused_uid=uid, lifted_at=now, paused_content=player_content),
     )
 
 

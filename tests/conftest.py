@@ -53,7 +53,7 @@ class FakeServices:
                     from homeassistant.exceptions import HomeAssistantError
 
                     raise HomeAssistantError("Spotify has reached its limit of 1 concurrent source streams")
-                self.set_player("playing")
+                self.set_player("playing", content=str(call.data["media_id"]))
             if call.domain == "select" and call.service == "select_option":
                 for entity_id in entity_ids or [STATUS]:
                     hass.states.async_set(entity_id, call.data["option"])
@@ -75,9 +75,12 @@ class FakeServices:
             "music_assistant", "get_queue", get_queue, supports_response=SupportsResponse.ONLY
         )
 
-    def set_player(self, state: str) -> None:
+    def set_player(self, state: str, content: str | None = None) -> None:
         old = self.hass.states.get(PLAYER)
-        self.hass.states.async_set(PLAYER, state, old.attributes if old else {})
+        attrs = dict(old.attributes) if old else {}
+        if content is not None:
+            attrs["media_content_id"] = content
+        self.hass.states.async_set(PLAYER, state, attrs)
 
     def named(self, domain: str, service: str) -> list[dict[str, Any]]:
         return [data for d, s, data in self.calls if d == domain and s == service]

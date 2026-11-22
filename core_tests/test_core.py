@@ -237,8 +237,30 @@ def test_lift_when_idle_goes_idle():
 
 def test_put_back_within_window_resumes_any_mode():
     for c in (card(), card(mode=PlayMode.SHUFFLE), series(), series(PlayMode.NEXT_ALBUM)):
-        d = on_placed(c, "U1", BoxState(paused_uid="U1", lifted_at=100), "paused", 160)
+        state = BoxState(paused_uid="U1", lifted_at=100, paused_content="spotify://track/t1")
+        d = on_placed(c, "U1", state, "paused", 160, player_content="spotify://track/t1")
         assert kinds(d) == ["resume", "status"], c.mode
+
+
+def test_lift_remembers_what_the_speaker_played():
+    d = on_lifted(BoxState(active_uid="U1"), "playing", 100, "spotify://track/t1")
+    assert d.state.paused_content == "spotify://track/t1"
+
+
+def test_something_else_played_in_between_is_not_resumed():
+    """Found 2026-11-22: a parent played something else in Music Assistant and paused it; putting the card back
+    pressed play on that. The card now starts its own content again, from its place."""
+    c = card(position=Position("spotify://track/t3", 30, 0))
+    state = BoxState(paused_uid="U1", lifted_at=100, paused_content="spotify://track/t3")
+    d = on_placed(c, "U1", state, "paused", 160, player_content="spotify://track/other")
+    assert kinds(d) == ["play", "seek", "status"]
+    assert d.actions[0].uri == "spotify://playlist/p" and d.actions[0].start_item == "spotify://track/t3"
+
+
+def test_unknown_speaker_content_is_not_resumed():
+    state = BoxState(paused_uid="U1", lifted_at=100)
+    d = on_placed(card(), "U1", state, "paused", 160, player_content=None)
+    assert kinds(d)[0] == "play"
 
 
 def test_put_back_after_window_from_start_restarts():
