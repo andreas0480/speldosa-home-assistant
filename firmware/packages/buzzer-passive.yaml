@@ -1,0 +1,25 @@
+# Passive buzzer or magnetic transducer driven by PWM (phase 3 MLT-8530, or a passive 12 mm buzzer on the phase
+# 2 carrier's BZ1 footprint): plays tones. pwm_platform: ledc on the ESP32-C6, esp8266_pwm on the ESP8266.
+output:
+  - platform: ${pwm_platform}
+    id: buzzer
+    pin: ${buzzer_pin}
+
+rtttl:
+  output: buzzer
+  gain: 60%
+
+script:
+  # card on: a rising major triad; card lifted: the same falling
+  - id: sound_card_on
+    mode: restart
+    then:
+      - rtttl.play: "on:d=16,o=6,b=180:c,e,g"
+  - id: sound_card_off
+    mode: restart
+    then:
+      - rtttl.play: "off:d=16,o=6,b=180:g,e,c"
+  - id: sound_unknown
+    mode: restart
+    then:
+      - rtttl.play: "unknown:d=8,o=5,b=180:g,p,e"

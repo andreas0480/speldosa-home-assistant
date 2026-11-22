@@ -1,0 +1,42 @@
+# Active buzzer through a transistor (phase 2 carrier, phase 1 green box): on or off, one pitch, so the sounds
+# are rhythms. Kept short to sound soft: the loudness of an active buzzer is fixed, a shorter pulse is perceived
+# as quieter (decided 2026-11-19: softer). A passive buzzer on the same footprint plays real tones with
+# buzzer-passive.yaml.
+output:
+  - platform: gpio
+    id: buzzer
+    pin: ${buzzer_pin}
+
+script:
+  # card on: short then long ("ti-taa")
+  - id: sound_card_on
+    mode: restart
+    then:
+      - output.turn_on: buzzer
+      - delay: 8ms
+      - output.turn_off: buzzer
+      - delay: 60ms
+      - output.turn_on: buzzer
+      - delay: 25ms
+      - output.turn_off: buzzer
+  # card lifted: long then short ("taa-ti")
+  - id: sound_card_off
+    mode: restart
+    then:
+      - output.turn_on: buzzer
+      - delay: 25ms
+      - output.turn_off: buzzer
+      - delay: 60ms
+      - output.turn_on: buzzer
+      - delay: 8ms
+      - output.turn_off: buzzer
+  - id: sound_unknown
+    mode: restart
+    then:
+      - repeat:
+          count: 2
+          then:
+            - output.turn_on: buzzer
+            - delay: 120ms
+            - output.turn_off: buzzer
+            - delay: 120ms

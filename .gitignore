@@ -1,0 +1,5 @@
+.esphome/
+dist/
+.log-*.txt
+__pycache__/
+*.pyc

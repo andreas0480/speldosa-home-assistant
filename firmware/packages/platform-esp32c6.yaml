@@ -1,0 +1,39 @@
+# ESP32-C6: XIAO ESP32-C6 (phase 2) and ESP32-C6-MINI-1-N4 (phase 3), both 4 MB flash.
+esp32:
+  variant: esp32c6
+  board: esp32-c6-devkitc-1
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+
+logger:
+  hardware_uart: USB_SERIAL_JTAG
+
+http_request:
+
+improv_ble:
+  authorizer: card_present
+  authorized_duration: 2min
+
+light:
+  - platform: esp32_rmt_led_strip
+    id: ring
+    internal: true
+    pin: ${led_pin}
+    num_leds: ${led_count}
+    chipset: WS2812
+    channel_colors: GRB
+    default_transition_length: 200ms
+    effects:
+      - pulse:
+          name: Pulse
+          transition_length: 1s
+          update_interval: 1s
+      - strobe:
+          name: Blink
+          colors:
+            - state: true
+              duration: 300ms
+            - state: false
+              duration: 300ms
+

@@ -1,0 +1,12 @@
+# PN7160 over I2C (phase 2 carrier socket J3, phase 3 board). Removal after tag_ttl without a read.
+pn7160_i2c:
+  id: reader
+  irq_pin: ${nfc_irq_pin}
+  ven_pin: ${nfc_ven_pin}
+  tag_ttl: 250ms
+  on_tag:
+    - script.execute:
+        id: card_seen
+        uid: !lambda return x;
+  on_tag_removed:
+    - script.execute: card_lost

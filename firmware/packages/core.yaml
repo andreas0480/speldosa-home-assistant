@@ -1,0 +1,288 @@
+# Speldosa core: everything that is the same on every board.
+# A board file sets the substitutions and adds one platform-*.yaml, one nfc-*.yaml and one buzzer-*.yaml package.
+# The platform package defines the chip, the logger, Bluetooth setup if any, and the light with id ring.
+#
+# Entities Home Assistant sees (the Speldosa integration finds them by these names):
+#   sensor  "Card"    UID of the card on the box, or "none"
+#   select  "Status"  set by Home Assistant: idle, playing, paused, unknown_card, error
+#   number  "Lift delay", "Light brightness"; switch "Sounds"; update "Firmware"
+#   diagnostic: "Wi-Fi signal", "Uptime", "Reset reason"
+#
+# Light and sound (decided 2026-11-19): steady green when the box is ready and empty, steady yellow while a card
+# is on it (half brightness when Home Assistant says paused), a sound when a card goes on and another when it is
+# lifted. Pulses and blinks are kept for faults, so paused is dimmer, not pulsing (orange pulse = no Wi-Fi).
+# Faults keep their pulses and blinks: orange no Wi-Fi, blue no Home Assistant, red reader or error, pink
+# unknown card. The buzzer package provides sound_card_on, sound_card_off and sound_unknown.
+
+substitutions:
+  version: "0.1.0"
+  update_url: "https://speldosa.se/firmware/${board_id}/manifest.json"
+
+esphome:
+  name: speldosa
+  friendly_name: Speldosa
+  name_add_mac_suffix: true
+  min_version: "2026.10.0"
+  build_path: build/${board_id}
+  project:
+    name: anjobe.speldosa
+    version: ${version}
+  on_boot:
+    - priority: -100
+      then:
+        - globals.set:
+            id: booted
+            value: "true"
+        - lambda: |-
+            if (id(current_uid).empty()) id(card).publish_state("none");
+        - script.execute: show_status
+    # After every component is set up: a reader that failed shows as a problem in HA and on the light.
+    - priority: -200
+      then:
+        - lambda: id(reader_problem).publish_state(id(reader)->is_failed());
+        - script.execute: show_status
+
+# No key in the image: Home Assistant sets a fresh key for each box when it adopts it.
+# No restart when Home Assistant or Wi-Fi is gone (the ESPHome default restarts after 15 min). A restart while
+# the PN532 keeps its power can leave the reader stuck until the box is unplugged (breadboard, 2026-11-17), and
+# HA updates or router outages would trigger it. The box reconnects without a restart.
+api:
+  reboot_timeout: 0s
+  encryption: {}
+  on_client_connected:
+    - script.execute: show_status
+  on_client_disconnected:
+    - script.execute: show_status
+
+ota:
+  - platform: esphome
+  - platform: http_request
+
+update:
+  - platform: http_request
+    name: Firmware
+    source: ${update_url}
+
+# No Wi-Fi network and no open fallback hotspot in the image. Wi-Fi is set over USB (Improv serial,
+# from the installer page) or, on the ESP32-C6, over Bluetooth (Improv BLE, authorised by a card on the box).
+# Power saving off: with it on (and Bluetooth Improv running), HA timed out connecting to the breadboard box
+# while its outbound traffic worked; the phase 1 green box always ran with NONE (2026-11-17). USB powered.
+wifi:
+  reboot_timeout: 0s
+  power_save_mode: none
+  on_connect:
+    - script.execute: show_status
+  on_disconnect:
+    - script.execute: show_status
+
+improv_serial:
+
+# Diagnostics: tell a Wi-Fi drop from a crash, and compare antennas (carrier 1, 2026-11-19).
+debug:
+  update_interval: 60s
+
+sensor:
+  - platform: wifi_signal
+    name: Wi-Fi signal
+    update_interval: 30s
+    entity_category: diagnostic
+  - platform: uptime
+    name: Uptime
+    update_interval: 60s
+    entity_category: diagnostic
+
+i2c:
+  sda: ${i2c_sda}
+  scl: ${i2c_scl}
+  frequency: 400kHz
+
+globals:
+  # False until on_boot: the Status select publishes its initial option during setup, before the LED strip
+  # has its buffer, and writing the light then crashes (2026-11-17, breadboard, store fault in set_red).
+  - id: booted
+    type: bool
+    restore_value: false
+    initial_value: "false"
+  - id: lost_at
+    type: uint32_t
+    restore_value: false
+    initial_value: "0"
+  - id: current_uid
+    type: std::string
+    restore_value: false
+    initial_value: '""'
+
+text_sensor:
+  - platform: debug
+    reset_reason:
+      name: Reset reason
+      entity_category: diagnostic
+  - platform: template
+    id: card
+    name: Card
+    icon: mdi:nfc-variant
+    update_interval: never
+    lambda: |-
+      return {"none"};
+
+binary_sensor:
+  - platform: template
+    id: card_present
+    name: Card present
+    internal: true
+  # On when the reader failed at boot. Unplugging the box for a few seconds is the fix on phase 2.
+  - platform: template
+    id: reader_problem
+    name: Reader problem
+    device_class: problem
+    entity_category: diagnostic
+
+select:
+  - platform: template
+    id: status
+    name: Status
+    icon: mdi:music-box-outline
+    optimistic: true
+    options:
+      - idle
+      - playing
+      - paused
+      - unknown_card
+      - error
+    initial_option: idle
+    on_value:
+      - script.execute: show_status
+
+number:
+  - platform: template
+    id: lift_delay
+    name: Lift delay
+    icon: mdi:timer-sand
+    entity_category: config
+    unit_of_measurement: s
+    min_value: 0.5
+    max_value: 5
+    step: 0.1
+    initial_value: ${lift_delay_default}
+    optimistic: true
+    restore_value: true
+  - platform: template
+    id: light_brightness
+    name: Light brightness
+    icon: mdi:brightness-6
+    entity_category: config
+    unit_of_measurement: "%"
+    min_value: 0
+    max_value: 100
+    step: 5
+    initial_value: 40
+    optimistic: true
+    restore_value: true
+    on_value:
+      - script.execute: show_status
+
+switch:
+  - platform: template
+    id: sounds
+    name: Sounds
+    icon: mdi:volume-high
+    entity_category: config
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+
+script:
+  # A card was seen by the reader. Cancels a pending lift, publishes only a change.
+  - id: card_seen
+    mode: queued
+    parameters:
+      uid: std::string
+    then:
+      - if:
+          condition:
+            script.is_running: card_lift
+          then:
+            - lambda: 'ESP_LOGI("speldosa", "card back after %u ms, lift cancelled", (unsigned) (millis() - id(lost_at)));'
+      - script.stop: card_lift
+      - if:
+          condition:
+            lambda: return id(current_uid) != uid;
+          then:
+            - lambda: |-
+                ESP_LOGI("speldosa", "card on: %s", uid.c_str());
+                id(current_uid) = uid;
+                id(card).publish_state(uid);
+                id(card_present).publish_state(true);
+            - script.execute: signal_card
+
+  # The reader lost the card. It counts as lifted only after the lift delay.
+  - id: card_lost
+    then:
+      - lambda: |-
+          id(lost_at) = millis();
+          ESP_LOGD("speldosa", "reader lost the card");
+      - script.execute: card_lift
+
+  - id: card_lift
+    mode: restart
+    then:
+      - delay: !lambda return (uint32_t) (id(lift_delay).state * 1000);
+      - lambda: |-
+          ESP_LOGI("speldosa", "card lifted: %u ms after the reader lost it", (unsigned) (millis() - id(lost_at)));
+          id(current_uid) = "";
+          id(card).publish_state("none");
+          id(card_present).publish_state(false);
+      - if:
+          condition:
+            switch.is_on: sounds
+          then:
+            - script.execute: sound_card_off
+      - script.execute: show_status
+
+  # A card went on: its sound, and the light turns to the card colour (show_status).
+  - id: signal_card
+    mode: restart
+    then:
+      - if:
+          condition:
+            switch.is_on: sounds
+          then:
+            - script.execute: sound_card_on
+      - script.execute: show_status
+
+  # The light shows the most urgent state: setup, no Home Assistant, then what Home Assistant set.
+  - id: show_status
+    mode: restart
+    then:
+      - lambda: |-
+          if (!id(booted)) return;
+          auto b = id(light_brightness).state / 100.0f;
+          auto call = id(ring).turn_on();
+          if (!wifi::global_wifi_component->is_connected()) {
+            call.set_rgb(1.0, 0.55, 0.0); call.set_brightness(b); call.set_effect("Pulse");
+          } else if (id(reader_problem).state) {
+            call.set_rgb(1.0, 0.0, 0.0); call.set_brightness(b); call.set_effect("Blink");
+          } else if (!api::global_api_server->is_connected()) {
+            call.set_rgb(0.0, 0.3, 1.0); call.set_brightness(b); call.set_effect("Pulse");
+          } else {
+            // Normal operation: steady green and empty, steady yellow with a card on, yellow at half
+            // brightness when Home Assistant says paused (decided 2026-11-19).
+            auto s = id(status).current_option();
+            if (s == "unknown_card") {
+              call.set_rgb(1.0, 0.0, 0.6); call.set_brightness(b); call.set_effect("Blink");
+            } else if (s == "error") {
+              call.set_rgb(1.0, 0.0, 0.0); call.set_brightness(b); call.set_effect("Blink");
+            } else if (id(card_present).state) {
+              call.set_rgb(1.0, 0.75, 0.0); call.set_brightness(s == "paused" ? b * 0.5f : b);
+              call.set_effect("None");
+              call.set_transition_length(250);
+            } else {
+              call.set_rgb(0.0, 1.0, 0.2); call.set_brightness(b); call.set_effect("None");
+              call.set_transition_length(400);
+            }
+          }
+          call.perform();
+      - if:
+          condition:
+            lambda: 'return id(status).current_option() == std::string("unknown_card") && id(sounds).state;'
+          then:
+            - script.execute: sound_unknown

@@ -1,0 +1,34 @@
+# ESP8266: Wemos D1 Mini (phase 1 test boxes). No Bluetooth, so Wi-Fi is set over USB only.
+esp8266:
+  board: d1_mini
+
+logger:
+  baud_rate: 115200
+
+# ESPHome cannot verify TLS certificates on the ESP8266, so update downloads are not authenticated.
+# Acceptable on a test box only.
+http_request:
+  verify_ssl: false
+
+light:
+  - platform: neopixelbus
+    id: ring
+    internal: true
+    variant: WS2812
+    type: GRB
+    pin: ${led_pin}
+    num_leds: ${led_count}
+    default_transition_length: 200ms
+    effects:
+      - pulse:
+          name: Pulse
+          transition_length: 1s
+          update_interval: 1s
+      - strobe:
+          name: Blink
+          colors:
+            - state: true
+              duration: 300ms
+            - state: false
+              duration: 300ms
+

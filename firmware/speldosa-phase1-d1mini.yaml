@@ -1,0 +1,17 @@
+# Speldosa phase 1 test box ("green box"): Wemos D1 Mini (ESP8266), PN532, one WS2812, active buzzer.
+# For testing the software before the phase 2 boards arrive. Pins read from the box's own boot log on
+# 2026-11-15 (I2C GPIO4/GPIO5, buzzer GPIO13, active); the LED is on D8 (GPIO15).
+substitutions:
+  board_id: phase1-d1mini
+  i2c_sda: GPIO4
+  i2c_scl: GPIO5
+  led_pin: GPIO15
+  led_count: "1"
+  buzzer_pin: GPIO13
+  lift_delay_default: "1.0"
+
+packages:
+  core: !include packages/core.yaml
+  platform: !include packages/platform-esp8266.yaml
+  nfc: !include packages/nfc-pn532.yaml
+  buzzer: !include packages/buzzer-active.yaml

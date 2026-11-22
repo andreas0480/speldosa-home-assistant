@@ -1,0 +1,17 @@
+# XIAO ESP32-C6 antenna choice (phase 2 carrier). The XIAO has a ceramic antenna and a U.FL socket behind an RF
+# switch: GPIO3 low powers the switch, GPIO14 low selects the ceramic antenna (the default), high the U.FL one
+# (Seeed wiki, xiao_esp32c6_getting_started, read 2026-11-19). Not for phase 3: GPIO3 is NFC VEN there.
+# "External antenna" in Home Assistant switches at once, so the two can be compared on "Wi-Fi signal".
+switch:
+  - platform: gpio
+    id: rf_switch_power
+    pin: GPIO3
+    internal: true
+    restore_mode: ALWAYS_OFF
+  - platform: gpio
+    id: external_antenna
+    name: External antenna
+    icon: mdi:antenna
+    entity_category: config
+    pin: GPIO14
+    restore_mode: ${external_antenna_default}

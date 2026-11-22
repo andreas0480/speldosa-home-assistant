@@ -1,0 +1,32 @@
+{
+  "_source": "music_assistant.search on a real Music Assistant install, query 'Die drei ???', all types, limit 6, 2026-11-19 (trimmed to name, uri, media_type, image, artists)",
+  "artists": [
+    {"media_type": "artist", "uri": "spotify--Ab12Cd34://artist/3meJIgRw7YleJrmbpbJK6S", "name": "Die drei ???", "image": "https://i.scdn.co/image/ab6761610000e5eb7de827ab626c867816052015"},
+    {"media_type": "artist", "uri": "spotify--Ab12Cd34://artist/2Jc4AEeBTE47KwuKgYOtcL", "name": "Die drei !!!", "image": null},
+    {"media_type": "artist", "uri": "spotify--Ab12Cd34://artist/0vLsqW05dyLvjuKKftAEGA", "name": "Die drei ??? Kids", "image": null},
+    {"media_type": "artist", "uri": "spotify--Ab12Cd34://artist/09L5Aekr29k35KoK8whElb", "name": "Die drei @@@ (Die drei Klammeraffen)", "image": null},
+    {"media_type": "artist", "uri": "spotify--Ab12Cd34://artist/1GykeX99Y2AIJeAcIHp5ie", "name": "Die drei", "image": null},
+    {"media_type": "artist", "uri": "spotify--Ab12Cd34://artist/61qDotnjM0jnY5lkfOP7ve", "name": "TKKG", "image": null}
+  ],
+  "albums": [
+    {"media_type": "album", "uri": "spotify--Ab12Cd34://album/5KWN3n8MxluTKKgV17zdJi", "name": "Adventskalender - 24 Tage voller Spannung!", "image": null, "artists": [{"name": "Die drei ??? Kids"}]},
+    {"media_type": "album", "uri": "spotify--Ab12Cd34://album/7e5uqca3BaiL3MURkBTFxJ", "name": "Adventskalender - O Geisterbaum", "image": null, "artists": [{"name": "Die drei ???"}]},
+    {"media_type": "album", "uri": "spotify--Ab12Cd34://album/0aNqdp5ayuUNsOdUwu8x0b", "name": "009/und die rätselhaften Bilder", "image": null, "artists": [{"name": "Die drei ???"}]},
+    {"media_type": "album", "uri": "spotify--Ab12Cd34://album/79enDMGQWH7LQ5weNB96g7", "name": "138/Die geheime Treppe", "image": null, "artists": [{"name": "Die drei ???"}]}
+  ],
+  "tracks": [],
+  "playlists": [
+    {"media_type": "playlist", "uri": "spotify--Ab12Cd34://playlist/6GW1MH9yw8zA2AHDPW73cO", "name": "Die drei ??? Kids - Alle Hörspiele", "image": null},
+    {"media_type": "playlist", "uri": "spotify--Ab12Cd34://playlist/1tZixEuiD9UMS1EOx9Fn4n", "name": "Die drei ??? Alle Folgen (1-240)", "image": null},
+    {"media_type": "playlist", "uri": "spotify--Ab12Cd34://playlist/1VtHOySw3BBw6rhi8vD7kp", "name": "Die drei !!! - Die drei Ausrufezeichen - Alle Hörspiele", "image": null}
+  ],
+  "radio": [],
+  "audiobooks": [
+    {"media_type": "audiobook", "uri": "spotify--Ab12Cd34://audiobook/00Ki2AwSdHldBP9DNCDsPI", "name": "Die drei kleinen Schweinchen", "image": null},
+    {"media_type": "audiobook", "uri": "spotify--Ab12Cd34://audiobook/0XH8ocaBKtC3bJj1QBLoMG", "name": "Die Tore der Welt: Ungekürzt", "image": null}
+  ],
+  "podcasts": [
+    {"media_type": "podcast", "uri": "spotify--Ab12Cd34://podcast/0Tvzqnl1y1vwvso7ERgfR0", "name": "Die drei ???", "image": null},
+    {"media_type": "podcast", "uri": "spotify--Ab12Cd34://podcast/0eviWCEGxEHQQIMesutkyN", "name": "Die Drei Rabauken", "image": null}
+  ]
+}

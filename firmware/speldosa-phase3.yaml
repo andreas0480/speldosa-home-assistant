@@ -1,0 +1,19 @@
+# Speldosa phase 3 board (draft, not built): ESP32-C6-MINI-1, PN7160, 12 WS2812B, MLT-8530.
+# Pins: the phase 3 board design (ESP32-C6-MINI-1 U1 connections).
+substitutions:
+  board_id: phase3
+  i2c_sda: GPIO6
+  i2c_scl: GPIO7
+  nfc_irq_pin: GPIO2
+  nfc_ven_pin: GPIO3
+  led_pin: GPIO21
+  led_count: "12"
+  buzzer_pin: GPIO19
+  pwm_platform: ledc
+  lift_delay_default: "1.5"
+
+packages:
+  core: !include packages/core.yaml
+  platform: !include packages/platform-esp32c6.yaml
+  nfc: !include packages/nfc-pn7160.yaml
+  buzzer: !include packages/buzzer-passive.yaml

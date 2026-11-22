@@ -1,0 +1,18 @@
+# Speldosa phase 2: carrier v1.0 with XIAO ESP32-C6 and a PN532 module in J2.
+# Pins: the phase 2 carrier v1.0 pinout (XIAO D0 LED, D1 buzzer, D2 NFC IRQ, D3 NFC VEN, D4/D5 I2C).
+substitutions:
+  board_id: phase2-pn532
+  i2c_sda: GPIO22
+  i2c_scl: GPIO23
+  led_pin: GPIO0
+  led_count: "1"
+  buzzer_pin: GPIO1
+  external_antenna_default: RESTORE_DEFAULT_OFF   # ceramic until switched in HA
+  lift_delay_default: "1.0"
+
+packages:
+  core: !include packages/core.yaml
+  platform: !include packages/platform-esp32c6.yaml
+  nfc: !include packages/nfc-pn532.yaml
+  buzzer: !include packages/buzzer-active.yaml
+  antenna: !include packages/antenna-xiao-c6.yaml

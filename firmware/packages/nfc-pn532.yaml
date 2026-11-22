@@ -1,0 +1,24 @@
+# PN532 over I2C (phase 2 carrier, socket J2). Polls; a lifted card is seen after up to one update_interval.
+pn532_i2c:
+  id: reader
+  update_interval: 300ms
+  # Set up last: at normal priority the module failed its first command on the breadboard (2026-11-17)
+  # and ESPHome does not retry; set up after Wi-Fi it answered at once (Found chip PN532, Firmware v1.6).
+  setup_priority: -100
+  on_tag:
+    - script.execute:
+        id: card_seen
+        uid: !lambda return x;
+  on_tag_removed:
+    - script.execute: card_lost
+
+# Before a planned restart (update, restart from HA): stop polling and abort the command the PN532 is working
+# on, so it is idle when the ESP comes back. An ACK frame from the host aborts the current command (PN532 user
+# manual, ACK frame). Not yet tested on hardware: the restart test on the breadboard is the check.
+esphome:
+  on_shutdown:
+    then:
+      - component.suspend: reader
+      - lambda: |-
+          static const uint8_t ACK[] = {0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
+          id(reader)->write(ACK, sizeof(ACK));
