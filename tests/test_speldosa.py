@@ -77,6 +77,18 @@ async def test_panel_registered(hass: HomeAssistant, box, player, services) -> N
     assert any("speldosa-icons.js" in url for url in hass.data[DATA_EXTRA_MODULE_URL].urls)
 
 
+async def test_brand_icon_is_served(hass: HomeAssistant, hass_client, box, player, services) -> None:
+    """HA 2026.3+ serves a custom integration's brand/ folder; that is where the Speldosa mark comes from."""
+    from homeassistant.setup import async_setup_component
+
+    assert await async_setup_component(hass, "brands", {})
+    client = await hass_client()
+    for image in ("icon.png", "icon@2x.png", "dark_icon.png", "logo.png"):
+        resp = await client.get(f"/api/brands/integration/speldosa/{image}")
+        assert resp.status == 200, image
+        assert (await resp.read())[:8] == b"\x89PNG\r\n\x1a\n"
+
+
 async def test_two_boxes_set_up_together(hass: HomeAssistant, box, player, services) -> None:
     """Both boxes load at startup at the same time; only one registers the panel (found 2026-11-20)."""
     from homeassistant.helpers import device_registry as dr, entity_registry as er
