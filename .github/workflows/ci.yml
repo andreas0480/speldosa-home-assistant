@@ -9,8 +9,8 @@ jobs:
   python:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.3.0
       - run: uv venv -p 3.14 && uv pip install -r requirements-test.txt
       - run: uv run --no-project python -m pytest -q
 
@@ -20,8 +20,8 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: 22
       - run: npm ci --legacy-peer-deps
@@ -33,7 +33,7 @@ jobs:
   hassfest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
       - uses: home-assistant/actions/hassfest@master
 
   hacs:
@@ -51,14 +51,14 @@ jobs:
       matrix:
         board: [speldosa-phase2-pn532, speldosa-phase2-pn7160, speldosa-phase3, speldosa-phase1-d1mini]
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/cache@v6.1.0
         with:
           path: ~/.platformio
           key: platformio-${{ hashFiles('firmware/ESPHOME_VERSION') }}
       - run: firmware/build.sh compile ${{ matrix.board }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: ${{ matrix.board }}
           path: dist/

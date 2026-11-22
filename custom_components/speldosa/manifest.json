@@ -5,6 +5,9 @@
     "esphome",
     "music_assistant"
   ],
+  "categories": [
+    "media_entertainment.music_radio_services"
+  ],
   "codeowners": [
     "@andreas0480"
   ],
@@ -20,5 +23,5 @@
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/andreas0480/speldosa-home-assistant/issues",
   "requirements": [],
-  "version": "0.3.0"
+  "version": "0.3.1"
 }
