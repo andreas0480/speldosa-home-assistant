@@ -108,7 +108,7 @@ under Inställningar, Enheter och tjänster, Speldosa, **Konfigurera**.
 | Pulserar blått | Home Assistant har inte lagt till speldosan ännu (steg 2) |
 | Blinkar rött och "kunde inte spela" | Meddelandet säger varför. Vanliga orsaker: högtalaren är av, eller musiktjänsten spelar på en annan högtalare. Spotify spelar på en högtalare i taget |
 | Blinkar rött och "Problem med läsaren" på sidan | Dra ur sladden några sekunder och sätt i den igen |
-| Sökningen hittar inget | Spotify kan vara upptaget: vänta en halv minut. Prova ett kortare ord |
+| Sökningen är långsam eller hittar inget | Spotify begränsar Music Assistants sökningar ("rate limit"; i Music Assistants logg står "Spotify Rate Limiter" eller "asked to wait ... seconds"). Vänta en minut och sök igen. Varaktigt: skapa en egen gratis Spotify developer-app och ange dess Client ID i Music Assistant, Inställningar, Providers, Spotify; med det delade standard-ID:t nås gränsen snabbt. Det löste det hos oss (2026-11-26) |
 | Kortet spelar fel sak | Sidan Speldosa, kortet, **Ändra** |
 
 ## Uppdateringar

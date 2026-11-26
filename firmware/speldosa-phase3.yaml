@@ -7,7 +7,7 @@ substitutions:
   nfc_irq_pin: GPIO2
   nfc_ven_pin: GPIO3
   led_pin: GPIO21
-  led_count: "12"
+  led_count: "1"                 # phase 3 v2: one LED at the centre behind the logo (Andreas, 2026-11-23)
   buzzer_pin: GPIO19
   pwm_platform: ledc
   lift_delay_default: "1.5"

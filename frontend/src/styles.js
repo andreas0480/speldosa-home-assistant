@@ -117,4 +117,8 @@ export const styles = css`
     padding: 12px 20px; border-radius: 8px; z-index: 10; max-width: calc(100% - 32px); }
   .error { color: var(--error-color, #db4437); }
   svg.icon { width: 24px; height: 24px; fill: currentColor; flex: 0 0 auto; }
+  .card-id {
+    font-family: var(--code-font-family, monospace);
+    font-size: 0.85em;
+  }
 `;

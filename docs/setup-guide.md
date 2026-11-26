@@ -104,7 +104,7 @@ Settings, Devices and services, Speldosa, **Configure**.
 | Blue pulse | Home Assistant has not added the box yet (step 2) |
 | Red blink and "could not play" | The notification says why. Common causes: the speaker is off, or the music service is playing on another speaker. Spotify plays on one speaker at a time |
 | Red blink and "Reader problem" on the page | Unplug the box for a few seconds and plug it back in |
-| Search finds nothing | Spotify may be busy: wait half a minute. Try a shorter word |
+| Search is slow or finds nothing | Spotify is limiting Music Assistant's searches ("rate limit"; Music Assistant's log says "Spotify Rate Limiter" or "asked to wait ... seconds"). Wait a minute and search again. For good: create your own free Spotify developer app and enter its Client ID in Music Assistant, Settings, Providers, Spotify; with the shared default ID the limit is reached quickly. This fixed it on our own setup (2026-11-26) |
 | The card plays the wrong thing | Speldosa page, the card, **Change** |
 
 ## Updates

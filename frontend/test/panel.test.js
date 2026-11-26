@@ -140,6 +140,18 @@ describe("cards page", () => {
     expect(t).toContain("BEST OF Italo Pop");
     expect(t).toContain("Playlist · From the start");
     expect(t).toContain("BA-2A-A2-80");
+    expect(t).toContain("Card 3A-33-84-19");
+    expect(t).toContain("Card 04-02");
+  });
+
+  it("names the linked card on a box and shows its card ID", async () => {
+    const ov = structuredClone(OVERVIEW);
+    ov.boxes[0].card = "04-02";
+    ov.boxes[0].card_linked = true;
+    const el = await mount(fakeHass("en", { "speldosa/overview": ov }));
+    const t = text(el);
+    expect(t).toContain("Card on: BEST OF Italo Pop");
+    expect(t).toContain("Card 04-02");
   });
 
   it("is in Swedish for a Swedish user", async () => {

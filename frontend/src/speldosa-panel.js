@@ -405,12 +405,15 @@ export class SpeldosaPanel extends LitElement {
 
   _renderBox(b) {
     const t = this._t;
+    // The card on the box: its name when linked, and always its card ID (Andreas, 2026-11-26)
+    const onBox = b.card ? (this._overview?.cards || []).find((c) => c.uid === b.card) : null;
     let cardState = t("card_none");
-    if (b.card) cardState = t("card_on", { state: b.card_linked ? t("linked") : t("not_linked") });
+    if (b.card) cardState = onBox ? t("card_on_named", { name: onBox.name }) : t("card_on_unlinked");
     return html`<div class="row">
       <div class="grow">
         <div><strong>${b.name}</strong></div>
         <div class="secondary">${[b.area, t("plays_on", { player: b.player_name })].filter(Boolean).join(" · ")}</div>
+        ${b.card ? html`<div class="secondary card-id">${t("card_id", { card: b.card })}</div>` : nothing}
       </div>
       ${b.available ? html`<span class="chip">${cardState}</span>` : html`<span class="chip warn">${t("offline")}</span>`}
       ${b.reader_problem ? html`<span class="chip warn">${t("reader_problem")}</span>` : html`<span class="chip">${t("reader_ok")}</span>`}
@@ -426,6 +429,7 @@ export class SpeldosaPanel extends LitElement {
       ${this._cover(c.image)}
       <div class="body">
         <div class="name">${c.name}</div>
+        <div class="secondary card-id">${t("card_id", { card: c.uid })}</div>
         <div class="secondary">${detail.join(" · ")}</div>
         ${c.current ? html`<div class="secondary">${t("listening", { title: c.current })}</div>` : nothing}
       </div>
