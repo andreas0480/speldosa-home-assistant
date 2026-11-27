@@ -22,7 +22,7 @@ The box arrives with its software already on it. Setting it up takes about 15 mi
 1. Plug the box into the computer with the USB-C cable.
 2. Open <https://web.esphome.io> in Chrome or Edge and select **Connect**.
 3. Pick the box from the list. Its name contains "USB JTAG" or "ESP32".
-4. Choose the option to set up Wi-Fi (not Install: the software is already on the box), pick your 2.4 GHz network
+4. Choose the option to set up Wi-Fi (**not Install: the software is already on the box**), pick your 2.4 GHz network
    and enter its password.
 5. When it says the box is connected, unplug it and plug it into its USB power supply in the child's room.
 
