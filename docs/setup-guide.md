@@ -19,14 +19,40 @@ The box arrives with its software already on it. Setting it up takes about 15 mi
 
 ## 1. Connect the box to Wi-Fi
 
-1. Plug the box into the computer with the USB-C cable.
-2. Open <https://web.esphome.io> in Chrome or Edge and select **Connect**.
-3. Pick the box from the list. Its name contains "USB JTAG" or "ESP32".
-4. Choose the option to set up Wi-Fi (**not Install: the software is already on the box**), pick your 2.4 GHz network
-   and enter its password.
-5. When it says the box is connected, unplug it and plug it into its USB power supply in the child's room.
+The box learns your Wi-Fi password over the USB cable, from a web page. The page has one small Wi-Fi button that
+is easy to miss, and a large blue button you must **not** press. Read this step through once before you start.
 
-The light pulses orange while the box has no Wi-Fi and pulses blue while it waits for Home Assistant.
+1. Plug the box into the computer with the USB-C cable.
+2. Open <https://web.esphome.io> in Chrome or Edge on the computer and select **Connect**.
+3. Chrome opens a small window, "web.esphome.io wants to connect to a serial port". Pick the line that says
+   **USB JTAG/serial debug unit** (with COM3, ttyACM0 or similar after it) and select **Connect**.
+   If the list is empty, see Troubleshooting below: it is almost always the cable.
+4. The page now shows a card, **ESP Device**, marked **Connected**. Under the text are one large blue button and
+   four small buttons:
+
+   ![The ESP Device card on web.esphome.io: do not press Prepare for first use or Install; press the third small button, Configure Wi-Fi](img/esphome-web-wifi.en.svg)
+
+   | Button | What it does | For Speldosa |
+   |---|---|---|
+   | **Prepare for first use** (large, blue, rocket) | Replaces the software on the box with plain ESPHome | **Do not press.** The box stops being a Speldosa |
+   | Arrow up (small, 1st) | Install other software | Do not press |
+   | Page with lines (small, 2nd) | Shows the box's log | Not needed |
+   | **Wi-Fi fan with a small cog (small, 3rd)** | **Configure Wi-Fi** | **Press this one** |
+   | Broken chain link (no frame) | Disconnect | Not needed |
+
+   The small buttons have no text. Hold the mouse over one and its name appears; the right one says
+   **Configure Wi-Fi**.
+5. A window opens. It says "Connecting", then "Searching for networks" for a few seconds. Then it shows
+   **Configure Wi-Fi** with Device Info at the top (the name starts with `speldosa-`).
+6. Under **Network**, pick your Wi-Fi. Pick a 2.4 GHz network: if your router shows two names, the one with 5G or
+   5GHz in it does not work. A hidden network is under **Join other…**.
+7. Type the Wi-Fi password under **Password** and select **Connect**. It says "Provisioning" for up to half a
+   minute.
+8. **Provisioned!** with a 🎉 means the box is on your Wi-Fi. Select **Close**. If it says **Unable to connect**,
+   the password was wrong or the network is 5 GHz: correct it and select **Connect** again.
+9. Unplug the box and plug it into its USB power supply in the child's room. It remembers the Wi-Fi.
+
+The light pulses orange while the box has no Wi-Fi and pulses blue while it waits for Home Assistant (step 2).
 
 ## 2. Add the box to Home Assistant
 
@@ -100,6 +126,8 @@ Settings, Devices and services, Speldosa, **Configure**.
 | What you see | What to do |
 |---|---|
 | web.esphome.io does not list the box | Try another USB-C cable; many only charge. Use Chrome or Edge on a computer |
+| No Wi-Fi window after the Wi-Fi button, or "Could not open the serial port" | Unplug the box, plug it back in, reload web.esphome.io and start again from **Connect** |
+| **Prepare for first use** or Install was pressed by mistake | The box no longer has the Speldosa software. Tell us: it has to be reinstalled |
 | Orange pulse after the Wi-Fi step | The network is 5 GHz only, or the password was wrong. Repeat step 1 |
 | Blue pulse | Home Assistant has not added the box yet (step 2) |
 | Red blink and "could not play" | The notification says why. Common causes: the speaker is off, or the music service is playing on another speaker. Spotify plays on one speaker at a time |

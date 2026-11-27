@@ -19,14 +19,40 @@ Speldosan kommer med programvaran redan installerad. Det tar ungefär en kvart a
 
 ## 1. Anslut speldosan till Wi-Fi
 
-1. Koppla speldosan till datorn med USB-C-kabeln.
-2. Öppna <https://web.esphome.io> i Chrome eller Edge och välj **Connect**.
-3. Välj speldosan i listan. Namnet innehåller "USB JTAG" eller "ESP32".
-4. Välj att ställa in Wi-Fi (inte Install: programvaran finns redan), välj ditt 2,4 GHz-nätverk och skriv
-   lösenordet.
-5. När det står att speldosan är ansluten kopplar du ur den och sätter den i sin USB-laddare i barnets rum.
+Speldosan får ditt Wi-Fi-lösenord via USB-kabeln, från en webbsida. Sidan har en liten Wi-Fi-knapp som är lätt att
+missa, och en stor blå knapp som du **inte** ska trycka på. Läs igenom steget en gång innan du börjar.
 
-Lampan pulserar orange så länge speldosan saknar Wi-Fi och pulserar blått medan den väntar på Home Assistant.
+1. Koppla speldosan till datorn med USB-C-kabeln.
+2. Öppna <https://web.esphome.io> i Chrome eller Edge på datorn och välj **Connect**.
+3. Chrome öppnar ett litet fönster, "web.esphome.io wants to connect to a serial port" (på svenska "vill ansluta
+   till en serieport"). Välj raden **USB JTAG/serial debug unit** (med COM3, ttyACM0 eller liknande efter) och
+   välj **Connect** (Anslut). Är listan tom, se Felsökning nedan: det är nästan alltid kabeln.
+4. Sidan visar nu ett kort, **ESP Device**, märkt **Connected**. Under texten finns en stor blå knapp och fyra små
+   knappar:
+
+   ![Kortet ESP Device på web.esphome.io: tryck inte på Prepare for first use eller Install; tryck på den tredje lilla knappen, Configure Wi-Fi](img/esphome-web-wifi.sv.svg)
+
+   | Knapp | Vad den gör | För Speldosa |
+   |---|---|---|
+   | **Prepare for first use** (stor, blå, raket) | Byter programvaran på speldosan mot vanlig ESPHome | **Tryck inte.** Då slutar den vara en speldosa |
+   | Pil uppåt (liten, 1:a) | Installerar annan programvara | Tryck inte |
+   | Papper med rader (liten, 2:a) | Visar speldosans logg | Behövs inte |
+   | **Wi-Fi-solfjäder med ett litet kugghjul (liten, 3:e)** | **Configure Wi-Fi** | **Tryck på den här** |
+   | Bruten kedjelänk (utan ram) | Kopplar från | Behövs inte |
+
+   De små knapparna har ingen text. Håll musen över en så visas namnet; den rätta heter **Configure Wi-Fi**.
+5. Ett fönster öppnas. Det står "Connecting" och sedan "Searching for networks" några sekunder. Sedan visas
+   **Configure Wi-Fi** med Device Info överst (namnet börjar med `speldosa-`).
+6. Under **Network** väljer du ditt Wi-Fi. Välj ett 2,4 GHz-nät: visar routern två namn fungerar inte det med 5G
+   eller 5GHz i namnet. Ett dolt nätverk finns under **Join other…**.
+7. Skriv Wi-Fi-lösenordet under **Password** och välj **Connect**. Det står "Provisioning" i upp till en halv
+   minut.
+8. **Provisioned!** med en 🎉 betyder att speldosan är på ditt Wi-Fi. Välj **Close**. Står det **Unable to
+   connect** var lösenordet fel eller nätet är 5 GHz: rätta det och välj **Connect** igen.
+9. Koppla ur speldosan och sätt den i sin USB-laddare i barnets rum. Den minns Wi-Fi-nätet.
+
+Lampan pulserar orange så länge speldosan saknar Wi-Fi och pulserar blått medan den väntar på Home Assistant
+(steg 2).
 
 ## 2. Lägg till speldosan i Home Assistant
 
@@ -103,6 +129,8 @@ under Inställningar, Enheter och tjänster, Speldosa, **Konfigurera**.
 
 | Det här ser du | Gör så här |
 |---|---|
+| Inget Wi-Fi-fönster efter Wi-Fi-knappen, eller "Could not open the serial port" | Koppla ur speldosan, sätt i den igen, ladda om web.esphome.io och börja om från **Connect** |
+| **Prepare for first use** eller Install trycktes av misstag | Speldosan har inte längre Speldosas programvara. Säg till oss: den måste installeras om |
 | web.esphome.io hittar inte speldosan | Prova en annan USB-C-kabel; många laddar bara. Använd Chrome eller Edge på en dator |
 | Pulserar orange efter Wi-Fi-steget | Nätverket är bara 5 GHz, eller lösenordet var fel. Gör om steg 1 |
 | Pulserar blått | Home Assistant har inte lagt till speldosan ännu (steg 2) |
