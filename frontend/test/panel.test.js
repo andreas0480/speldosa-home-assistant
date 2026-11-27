@@ -7,11 +7,11 @@ const OVERVIEW = {
   boxes: [
     {
       entry_id: "box1", name: "Speldosa 55c889", area: "Office", player: "media_player.office_2",
-      player_name: "Office", player_state: "idle", available: true, card: "3A-33-84-19",
-      card_linked: false, reader_problem: false,
+      player_name: "Office", player_state: "idle", available: true, tag: "3A-33-84-19",
+      tag_linked: false, reader_problem: false,
     },
   ],
-  cards: [
+  tags: [
     {
       uid: "04-02", name: "BEST OF Italo Pop", uri: "spotify://playlist/i", media_type: "playlist",
       mode: "from_start", modes: ["from_start", "shuffle", "resume"], image: null, subtitle: null,
@@ -59,11 +59,11 @@ function fakeHass(language = "en", answers = {}) {
       if (msg.type === "speldosa/overview") return structuredClone(OVERVIEW);
       if (msg.type === "speldosa/now_playing") return { player_name: "Office", now: null };
       if (msg.type === "speldosa/search") return structuredClone(SEARCH);
-      if (msg.type === "speldosa/card/link") return { ...msg, name: msg.name };
-      if (msg.type === "speldosa/card/update") return { ...OVERVIEW.cards[0], ...msg };
-      if (msg.type === "speldosa/card/try") return { player_name: "Office" };
+      if (msg.type === "speldosa/tag/link") return { ...msg, name: msg.name };
+      if (msg.type === "speldosa/tag/update") return { ...OVERVIEW.tags[0], ...msg };
+      if (msg.type === "speldosa/tag/try") return { player_name: "Office" };
       if (msg.type === "speldosa/episodes") return { episodes: structuredClone(EPISODES) };
-      if (msg.type === "speldosa/card/get") return { ...OVERVIEW.cards[0], episode_list: [] };
+      if (msg.type === "speldosa/tag/get") return { ...OVERVIEW.tags[0], episode_list: [] };
       return {};
     }),
   };
@@ -130,33 +130,33 @@ describe("debounce", () => {
   });
 });
 
-describe("cards page", () => {
-  it("shows the new card, the box, linked and seen cards", async () => {
+describe("tags page", () => {
+  it("shows the new tag, the box, linked and seen tags", async () => {
     const el = await mount(fakeHass());
     const t = text(el);
-    expect(t).toContain("A new card is on Speldosa 55c889");
-    expect(t).toContain("Card on: not linked");
+    expect(t).toContain("A new tag is on Speldosa 55c889");
+    expect(t).toContain("Tag on: not linked");
     expect(t).toContain("Office · plays on Office");
     expect(t).toContain("BEST OF Italo Pop");
     expect(t).toContain("Playlist · From the start");
     expect(t).toContain("BA-2A-A2-80");
-    expect(t).toContain("Card 3A-33-84-19");
-    expect(t).toContain("Card 04-02");
+    expect(t).toContain("Tag 3A-33-84-19");
+    expect(t).toContain("Tag 04-02");
   });
 
-  it("names the linked card on a box and shows its card ID", async () => {
+  it("names the linked tag on a box and shows its tag ID", async () => {
     const ov = structuredClone(OVERVIEW);
-    ov.boxes[0].card = "04-02";
-    ov.boxes[0].card_linked = true;
+    ov.boxes[0].tag = "04-02";
+    ov.boxes[0].tag_linked = true;
     const el = await mount(fakeHass("en", { "speldosa/overview": ov }));
     const t = text(el);
-    expect(t).toContain("Card on: BEST OF Italo Pop");
-    expect(t).toContain("Card 04-02");
+    expect(t).toContain("Tag on: BEST OF Italo Pop");
+    expect(t).toContain("Tag 04-02");
   });
 
   it("is in Swedish for a Swedish user", async () => {
     const el = await mount(fakeHass("sv"));
-    expect(text(el)).toContain("Ett nytt kort ligger på Speldosa 55c889");
+    expect(text(el)).toContain("En ny bricka ligger på Speldosa 55c889");
     expect(text(el)).toContain("Spellista · Från början");
   });
 
@@ -167,14 +167,14 @@ describe("cards page", () => {
   });
 });
 
-describe("linking a card", () => {
+describe("linking a tag", () => {
   let hass;
   let el;
 
   beforeEach(async () => {
     hass = fakeHass();
     el = await mount(hass);
-    button(el, "Link this card").click();
+    button(el, "Link this tag").click();
     await settle(el);
   });
 
@@ -217,11 +217,11 @@ describe("linking a card", () => {
       type: "speldosa/episodes", uri: "spotify://artist/d", media_type: "artist", uid: "3A-33-84-19", box_id: "box1",
     });
     expect(text(el)).toContain("2 of 3 chosen");
-    button(el, "Link card").click();
+    button(el, "Link tag").click();
     await settle(el);
-    const link = hass.calls.find((c) => c.type === "speldosa/card/link");
+    const link = hass.calls.find((c) => c.type === "speldosa/tag/link");
     expect(link).toEqual({
-      type: "speldosa/card/link", uid: "3A-33-84-19", uri: "spotify://artist/d", media_type: "artist",
+      type: "speldosa/tag/link", uid: "3A-33-84-19", uri: "spotify://artist/d", media_type: "artist",
       name: "Die drei ???", mode: "random_album", image: "https://i.scdn.co/a", subtitle: null, box_id: "box1",
       episodes: EPISODES.map(({ uri, title, number, included }) => ({ uri, title, number, included })),
     });
@@ -245,9 +245,9 @@ describe("linking a card", () => {
     qa(el, "label.mode input")[2].click(); // shuffle: no album list, none sent
     await settle(el);
     expect(q(el, "fieldset.episodes")).toBeNull();
-    button(el, "Link card").click();
+    button(el, "Link tag").click();
     await settle(el);
-    const link = hass.calls.find((c) => c.type === "speldosa/card/link");
+    const link = hass.calls.find((c) => c.type === "speldosa/tag/link");
     expect(link.mode).toBe("shuffle");
     expect(link.episodes).toBeUndefined();
   });
@@ -258,9 +258,9 @@ describe("linking a card", () => {
     await settle(el);
     qa(el, "label.mode input")[1].click();
     await settle(el);
-    button(el, "Link card").click();
+    button(el, "Link tag").click();
     await settle(el);
-    const link = hass.calls.find((c) => c.type === "speldosa/card/link");
+    const link = hass.calls.find((c) => c.type === "speldosa/tag/link");
     expect(link.image).toBe("http://ma/imageproxy/x");
     expect(link.mode).toBe("shuffle");
   });
@@ -284,14 +284,14 @@ describe("linking a card", () => {
     await settle(el);
     button(el, "Try on Office").click();
     await settle(el);
-    expect(hass.calls.find((c) => c.type === "speldosa/card/try")).toEqual({
-      type: "speldosa/card/try", uri: "spotify://playlist/alle", media_type: "playlist", mode: "from_start", box_id: "box1",
+    expect(hass.calls.find((c) => c.type === "speldosa/tag/try")).toEqual({
+      type: "speldosa/tag/try", uri: "spotify://playlist/alle", media_type: "playlist", mode: "from_start", box_id: "box1",
     });
     expect(text(el)).toContain("Playing on Office");
   });
 });
 
-describe("changing a card", () => {
+describe("changing a tag", () => {
   it("saves a new mode and name", async () => {
     const hass = fakeHass();
     const el = await mount(hass);
@@ -305,8 +305,8 @@ describe("changing a card", () => {
     await settle(el);
     button(el, "Save").click();
     await settle(el);
-    expect(hass.calls.find((c) => c.type === "speldosa/card/update")).toEqual({
-      type: "speldosa/card/update", uid: "04-02", mode: "shuffle", name: "Italo",
+    expect(hass.calls.find((c) => c.type === "speldosa/tag/update")).toEqual({
+      type: "speldosa/tag/update", uid: "04-02", mode: "shuffle", name: "Italo",
     });
   });
 
@@ -318,9 +318,9 @@ describe("changing a card", () => {
     button(el, "Unlink").click();
     await settle(el);
     expect(text(el)).toContain("Unlink BEST OF Italo Pop?");
-    expect(hass.calls.find((c) => c.type === "speldosa/card/unlink")).toBeUndefined();
+    expect(hass.calls.find((c) => c.type === "speldosa/tag/unlink")).toBeUndefined();
     button(el, "Unlink").click();
     await settle(el);
-    expect(hass.calls.find((c) => c.type === "speldosa/card/unlink")).toEqual({ type: "speldosa/card/unlink", uid: "04-02" });
+    expect(hass.calls.find((c) => c.type === "speldosa/tag/unlink")).toEqual({ type: "speldosa/tag/unlink", uid: "04-02" });
   });
 });

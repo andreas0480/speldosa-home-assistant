@@ -12,7 +12,7 @@ logger:
 http_request:
 
 improv_ble:
-  authorizer: card_present
+  authorizer: tag_present
   authorized_duration: 2min
 
 light:

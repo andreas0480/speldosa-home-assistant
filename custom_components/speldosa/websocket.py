@@ -14,7 +14,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import music
 from .const import DOMAIN, EPISODES_MAX_AGE_S, SIGNAL_CHANGED
-from .core import SERIES_MODES, Card, Episode, PlayMode, default_mode, merge_episodes, modes_for, suggest_episodes
+from .core import SERIES_MODES, Tag, Episode, PlayMode, default_mode, merge_episodes, modes_for, suggest_episodes
 from .core.models import MEDIA_TYPES, strip_shared_prefix
 
 if TYPE_CHECKING:
@@ -36,28 +36,28 @@ def _controller(hass: HomeAssistant, box_id: str | None):
     return next(iter(controllers.values()))
 
 
-def _card_json(data: SpeldosaData, card: Card, token_id: str | None) -> dict[str, Any]:
+def _tag_json(data: SpeldosaData, tag: Tag, token_id: str | None) -> dict[str, Any]:
     return {
-        "uid": card.uid,
-        "name": card.name,
-        "uri": card.uri,
-        "media_type": card.media_type,
-        "mode": card.mode.value,
-        "modes": [m.value for m in modes_for(card.media_type)],
-        "image": data.images.page_url(card.image, token_id),
-        "subtitle": card.subtitle,
-        "episodes": len(card.episodes),
-        "included": len(card.included()),
-        "heard": card.heard,
-        "current": _episode_title(card, card.current),
-        "has_position": card.position is not None,
+        "uid": tag.uid,
+        "name": tag.name,
+        "uri": tag.uri,
+        "media_type": tag.media_type,
+        "mode": tag.mode.value,
+        "modes": [m.value for m in modes_for(tag.media_type)],
+        "image": data.images.page_url(tag.image, token_id),
+        "subtitle": tag.subtitle,
+        "episodes": len(tag.episodes),
+        "included": len(tag.included()),
+        "heard": tag.heard,
+        "current": _episode_title(tag, tag.current),
+        "has_position": tag.position is not None,
     }
 
 
-def _episode_title(card: Card, uri: str | None) -> str | None:
+def _episode_title(tag: Tag, uri: str | None) -> str | None:
     if uri is None:
         return None
-    return next((e.title for e in card.episodes if e.uri == uri), None)
+    return next((e.title for e in tag.episodes if e.uri == uri), None)
 
 
 def _episodes_json(data: SpeldosaData, episodes: list[Episode], token_id: str | None) -> list[dict[str, Any]]:
@@ -115,7 +115,7 @@ def async_register(hass: HomeAssistant) -> None:
         ws_forget_seen,
         ws_subscribe,
         ws_episodes,
-        ws_card_get,
+        ws_tag_get,
     ):
         websocket_api.async_register_command(hass, handler)
 
@@ -129,7 +129,7 @@ def ws_overview(hass: HomeAssistant, connection: websocket_api.ActiveConnection,
         msg["id"],
         {
             "boxes": [c.summary() for c in data.controllers.values()],
-            "cards": [_card_json(data, c, token_id) for c in data.store.all()],
+            "tags": [_tag_json(data, c, token_id) for c in data.store.all()],
             "seen": [s.to_dict() for s in data.store.seen() if data.store.get(s.uid) is None],
         },
     )
@@ -179,15 +179,15 @@ async def ws_now_playing(hass: HomeAssistant, connection: websocket_api.ActiveCo
 
 async def _refresh_episodes(hass: HomeAssistant, uid: str, player: str) -> None:
     data = _data(hass)
-    card = data.store.get(uid)
-    if card is None or card.mode not in SERIES_MODES:
+    tag = data.store.get(uid)
+    if tag is None or tag.mode not in SERIES_MODES:
         return
-    items = await music.async_episodes(hass, player, card.uri, card.media_type)
+    items = await music.async_episodes(hass, player, tag.uri, tag.media_type)
     if items:
         fresh = suggest_episodes(items)
         # A list migrated from store version 2 has no titles and no real choice: take the suggestion instead.
-        chosen_by_parent = not _untitled(card.episodes)
-        data.store.set_episodes(uid, merge_episodes(card.episodes, fresh) if chosen_by_parent else fresh)
+        chosen_by_parent = not _untitled(tag.episodes)
+        data.store.set_episodes(uid, merge_episodes(tag.episodes, fresh) if chosen_by_parent else fresh)
 
 
 def _untitled(episodes: list[Episode]) -> bool:
@@ -201,20 +201,20 @@ def _untitled(episodes: list[Episode]) -> bool:
 
 def async_refresh_stale_episodes(hass: HomeAssistant, player: str) -> None:
     """Refresh episode lists older than EPISODES_MAX_AGE_S in the background."""
-    for card in _data(hass).store.all():
-        if card.mode in SERIES_MODES and (
-            not card.episodes
-            or _untitled(card.episodes)
-            or (time.time() - (card.episodes_updated or 0)) > EPISODES_MAX_AGE_S
+    for tag in _data(hass).store.all():
+        if tag.mode in SERIES_MODES and (
+            not tag.episodes
+            or _untitled(tag.episodes)
+            or (time.time() - (tag.episodes_updated or 0)) > EPISODES_MAX_AGE_S
         ):
             hass.async_create_background_task(
-                _refresh_episodes(hass, card.uid, player), f"speldosa episodes {card.uid}"
+                _refresh_episodes(hass, tag.uid, player), f"speldosa episodes {tag.uid}"
             )
 
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "speldosa/card/link",
+        vol.Required("type"): "speldosa/tag/link",
         vol.Required("uid"): str,
         vol.Required("uri"): str,
         vol.Required("media_type"): vol.In(MEDIA_TYPES),
@@ -238,7 +238,7 @@ async def ws_link(hass: HomeAssistant, connection: websocket_api.ActiveConnectio
     same_content = old is not None and old.uri == msg["uri"]
     old_episodes = old.episodes if same_content else []
     episodes = _episodes_from_msg(msg["episodes"], old_episodes) if "episodes" in msg else old_episodes
-    card = Card(
+    tag = Tag(
         uid=msg["uid"],
         name=msg["name"].strip() or msg["uri"],
         uri=msg["uri"],
@@ -255,24 +255,24 @@ async def ws_link(hass: HomeAssistant, connection: websocket_api.ActiveConnectio
         position=old.position if same_content else None,
         linked_at=time.time(),
     )
-    data.store.set(card)
+    data.store.set(tag)
     for controller in data.controllers.values():
         persistent_notification.async_dismiss(hass, f"{DOMAIN}_unknown_{controller.entry_id}")
     controller = _controller(hass, msg.get("box_id"))
-    if mode in SERIES_MODES and not card.episodes:
+    if mode in SERIES_MODES and not tag.episodes:
         hass.async_create_background_task(
-            _refresh_episodes(hass, card.uid, controller.player), f"speldosa episodes {card.uid}"
+            _refresh_episodes(hass, tag.uid, controller.player), f"speldosa episodes {tag.uid}"
         )
-    # The card is on a box right now: start it there, as if it had just been put on.
+    # The tag is on a box right now: start it there, as if it had just been put on.
     for box in data.controllers.values():
-        if box.current_card() == card.uid:
-            hass.async_create_task(box.async_card_placed(card.uid))
-    connection.send_result(msg["id"], _card_json(data, card, connection.refresh_token_id))
+        if box.current_tag() == tag.uid:
+            hass.async_create_task(box.async_tag_placed(tag.uid))
+    connection.send_result(msg["id"], _tag_json(data, tag, connection.refresh_token_id))
 
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "speldosa/card/update",
+        vol.Required("type"): "speldosa/tag/update",
         vol.Required("uid"): str,
         vol.Optional("name"): str,
         vol.Optional("mode"): vol.In([m.value for m in PlayMode]),
@@ -282,32 +282,32 @@ async def ws_link(hass: HomeAssistant, connection: websocket_api.ActiveConnectio
 @websocket_api.async_response
 async def ws_update(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
     data = _data(hass)
-    card = data.store.get(msg["uid"])
-    if card is None:
-        connection.send_error(msg["id"], "not_found", "No such card")
+    tag = data.store.get(msg["uid"])
+    if tag is None:
+        connection.send_error(msg["id"], "not_found", "No such tag")
         return
     if "mode" in msg:
         mode = PlayMode(msg["mode"])
-        if mode not in modes_for(card.media_type):
-            connection.send_error(msg["id"], "invalid_mode", f"{mode} is not offered for {card.media_type}")
+        if mode not in modes_for(tag.media_type):
+            connection.send_error(msg["id"], "invalid_mode", f"{mode} is not offered for {tag.media_type}")
             return
-        if mode != card.mode:
+        if mode != tag.mode:
             # A new order for the new mode; an album being listened to is kept.
-            card.order, card.order_pos = [], 0
-        card.mode = mode
+            tag.order, tag.order_pos = [], 0
+        tag.mode = mode
     if msg.get("name", "").strip():
-        card.name = msg["name"].strip()
+        tag.name = msg["name"].strip()
     if "episodes" in msg:
-        card.episodes = _episodes_from_msg(msg["episodes"], card.episodes)
-        card.episodes_updated = time.time()
-    data.store.set(card)
-    if card.mode in SERIES_MODES and not card.episodes:
+        tag.episodes = _episodes_from_msg(msg["episodes"], tag.episodes)
+        tag.episodes_updated = time.time()
+    data.store.set(tag)
+    if tag.mode in SERIES_MODES and not tag.episodes:
         player = _controller(hass, None).player
-        hass.async_create_background_task(_refresh_episodes(hass, card.uid, player), f"speldosa episodes {card.uid}")
-    connection.send_result(msg["id"], _card_json(data, card, connection.refresh_token_id))
+        hass.async_create_background_task(_refresh_episodes(hass, tag.uid, player), f"speldosa episodes {tag.uid}")
+    connection.send_result(msg["id"], _tag_json(data, tag, connection.refresh_token_id))
 
 
-@websocket_api.websocket_command({vol.Required("type"): "speldosa/card/unlink", vol.Required("uid"): str})
+@websocket_api.websocket_command({vol.Required("type"): "speldosa/tag/unlink", vol.Required("uid"): str})
 @callback
 def ws_unlink(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
     _data(hass).store.remove(msg["uid"])
@@ -316,7 +316,7 @@ def ws_unlink(hass: HomeAssistant, connection: websocket_api.ActiveConnection, m
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "speldosa/card/try",
+        vol.Required("type"): "speldosa/tag/try",
         vol.Required("uri"): str,
         vol.Required("media_type"): vol.In(MEDIA_TYPES),
         vol.Optional("mode"): vol.In([m.value for m in PlayMode]),
@@ -333,7 +333,7 @@ async def ws_try(hass: HomeAssistant, connection: websocket_api.ActiveConnection
         mode = PlayMode.SHUFFLE
     if mode not in modes_for(media_type):
         mode = default_mode(media_type)
-    trial = Card(uid="try", name=msg["uri"], uri=msg["uri"], media_type=media_type, mode=mode)
+    trial = Tag(uid="try", name=msg["uri"], uri=msg["uri"], media_type=media_type, mode=mode)
     try:
         await controller.async_try(trial)
     except HomeAssistantError as err:
@@ -352,7 +352,7 @@ def ws_forget_seen(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
 @websocket_api.websocket_command({vol.Required("type"): "speldosa/subscribe"})
 @callback
 def ws_subscribe(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
-    """Sends {"changed": true} whenever cards, seen cards or a box's card change; the page then refetches."""
+    """Sends {"changed": true} whenever tags, seen tags or a box's tag change; the page then refetches."""
 
     @callback
     def forward() -> None:
@@ -385,15 +385,15 @@ async def ws_episodes(hass: HomeAssistant, connection: websocket_api.ActiveConne
     connection.send_result(msg["id"], {"episodes": _episodes_json(data, episodes, connection.refresh_token_id)})
 
 
-@websocket_api.websocket_command({vol.Required("type"): "speldosa/card/get", vol.Required("uid"): str})
+@websocket_api.websocket_command({vol.Required("type"): "speldosa/tag/get", vol.Required("uid"): str})
 @callback
-def ws_card_get(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
+def ws_tag_get(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
     data = _data(hass)
-    card = data.store.get(msg["uid"])
-    if card is None:
-        connection.send_error(msg["id"], "not_found", "No such card")
+    tag = data.store.get(msg["uid"])
+    if tag is None:
+        connection.send_error(msg["id"], "not_found", "No such tag")
         return
     token_id = connection.refresh_token_id
-    result = _card_json(data, card, token_id)
-    result["episode_list"] = _episodes_json(data, card.episodes, token_id)
+    result = _tag_json(data, tag, token_id)
+    result["episode_list"] = _episodes_json(data, tag.episodes, token_id)
     connection.send_result(msg["id"], result)

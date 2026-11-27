@@ -10,7 +10,7 @@ it("the built bundle defines speldosa-panel", async () => {
     language: "en",
     locale: { language: "en" },
     connection: { subscribeMessage: async () => () => {} },
-    callWS: async () => ({ boxes: [], cards: [], seen: [] }),
+    callWS: async () => ({ boxes: [], tags: [], seen: [] }),
   };
   document.body.appendChild(el);
   await el.updateComplete;

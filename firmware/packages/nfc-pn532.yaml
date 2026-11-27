@@ -1,4 +1,4 @@
-# PN532 over I2C (phase 2 carrier, socket J2). Polls; a lifted card is seen after up to one update_interval.
+# PN532 over I2C (phase 2 carrier, socket J2). Polls; a lifted tag is seen after up to one update_interval.
 pn532_i2c:
   id: reader
   update_interval: 300ms
@@ -7,10 +7,10 @@ pn532_i2c:
   setup_priority: -100
   on_tag:
     - script.execute:
-        id: card_seen
+        id: tag_seen
         uid: !lambda return x;
   on_tag_removed:
-    - script.execute: card_lost
+    - script.execute: tag_lost
 
 # Before a planned restart (update, restart from HA): stop polling and abort the command the PN532 is working
 # on, so it is idle when the ESP comes back. An ACK frame from the host aborts the current command (PN532 user

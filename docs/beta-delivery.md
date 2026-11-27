@@ -1,7 +1,7 @@
 # Preparing a box for a beta family
 
 How a Speldosa box is made ready before it is handed over, so that the family does every step a buyer would:
-Wi-Fi, adding the box to Home Assistant, installing the integration, linking cards. The family then follows the
+Wi-Fi, adding the box to Home Assistant, installing the integration, linking tags. The family then follows the
 [setup guide](setup-guide.md) ([svenska](setup-guide.sv.md)).
 
 ## Base image
@@ -37,7 +37,7 @@ python3 installer/improv_serial_test.py /dev/ttyACM0 info
 Expected: Improv state "ready" (not provisioned), device info `anjobe.speldosa` with the release version and
 ESP32-C6. Do not send Wi-Fi: that is the family's first step.
 
-Then put a card on it: the box reads it (white flash and a sound) even without Wi-Fi.
+Then put a tag on it: the box reads it (white flash and a sound) even without Wi-Fi.
 
 ## Box contents
 
@@ -46,7 +46,7 @@ Then put a card on it: the box reads it (white flash and a sound) even without W
 | The box | Base image as above |
 | USB-C data cable | A charge-only cable makes the Wi-Fi step fail |
 | USB power supply | 5 V; any phone charger with USB-C or USB-A |
-| Cards | NTAG213 or NTAG215 cards or stickers. Mifare Classic cards also read |
+| Tags | NTAG213 or NTAG215 cards, coins or stickers. Mifare Classic cards also read |
 | The setup guide | A link to `docs/setup-guide.sv.md` or the English one |
 
 ## Family prerequisites

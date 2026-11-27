@@ -1,7 +1,8 @@
 # Speldosa, så kommer du igång
 
-Speldosa är en speldosa för barn. Lägg ett kort på speldosan så spelas musiken, sagan eller ljudboken som hör
-till kortet i en högtalare i rummet. Lyft kortet så pausar det. Lägg tillbaka det så fortsätter det.
+Speldosa är en speldosa för barn. Lägg en bricka på speldosan så spelas musiken, sagan eller ljudboken som hör
+till brickan i en högtalare i rummet. Lyft brickan så pausar det. Lägg tillbaka den så fortsätter det. En bricka är
+allt med ett NFC-chip i: ett kort, ett mynt eller ett klistermärke.
 
 In English: [setup-guide.md](setup-guide.md).
 
@@ -72,18 +73,18 @@ Lampan pulserar orange så länge speldosan saknar Wi-Fi och pulserar blått med
 
 En sida som heter **Speldosa** dyker upp i sidofältet.
 
-## 4. Koppla korten
+## 4. Koppla brickorna
 
-1. Lägg ett nytt kort på speldosan och låt det ligga kvar. Lampan blinkar rosa och speldosan ger två korta ljud:
-   kortet har ingen musik ännu.
-2. Öppna **Speldosa** i sidofältet. En blå ruta säger att ett nytt kort ligger på speldosan. Välj **Koppla
-   kortet**.
-3. Skriv vad kortet ska spela, till exempel "Bamse" eller "Die drei ???". Träffarna kommer från din musiktjänst.
+1. Lägg en ny bricka på speldosan och låt den ligga kvar. Lampan blinkar rosa och speldosan ger två korta ljud:
+   brickan har ingen musik ännu.
+2. Öppna **Speldosa** i sidofältet. En blå ruta säger att en ny bricka ligger på speldosan. Välj **Koppla
+   brickan**.
+3. Skriv vad brickan ska spela, till exempel "Bamse" eller "Die drei ???". Träffarna kommer från din musiktjänst.
    Kommer inget tillbaka kan Spotify vara upptaget: vänta en halv minut och försök igen.
-4. Välj en träff. Till höger väljer du hur kortet ska spela (se nedan) och sedan **Koppla kortet**. Det börjar
+4. Välj en träff. Till höger väljer du hur brickan ska spela (se nedan) och sedan **Koppla brickan**. Det börjar
    spela.
 
-Gör likadant för varje kort.
+Gör likadant för varje bricka.
 
 ## Spelval
 
@@ -100,27 +101,41 @@ För de två albumvalen visar sidan artistens album. Adventskalendrar, soundtrac
 ikryssade, och när de flesta album har ett avsnittsnummer är bara de numrerade ikryssade. Kryssa i eller ur som
 du vill.
 
-Lyfts kortet mitt i ett album fortsätter det där när kortet kommer tillbaka, hur länge det än dröjer. Kortet går
+Lyfts brickan mitt i ett album fortsätter det där när brickan kommer tillbaka, hur länge det än dröjer. Brickan går
 vidare till ett nytt album först när albumet har hörts till slutet.
 
 ## Lyfta och lägga tillbaka
 
-- Lyft kortet: musiken pausar.
-- Lägg tillbaka det inom 15 minuter: det fortsätter där det var, oavsett hur kortet är inställt.
-- Efter det bestämmer kortets val, som i tabellen ovan.
+- Lyft brickan: musiken pausar.
+- Lägg tillbaka den inom 15 minuter: det fortsätter där det var, oavsett hur brickan är inställd.
+- Efter det bestämmer brickans val, som i tabellen ovan.
 
-De 15 minuterna, startvolymen (40 %) och om speldosan först ska lämna en högtalargrupp ställs in per speldosa
-under Inställningar, Enheter och tjänster, Speldosa, **Konfigurera**.
+De 15 minuterna, startvolymen (40 %), om speldosan först ska lämna en högtalargrupp och musikkontot (nedan)
+ställs in per speldosa under Inställningar, Enheter och tjänster, Speldosa, **Konfigurera**.
+
+## Två speldosor som spelar samtidigt
+
+Ett Spotify-konto spelar en sak i taget, så med ett konto stoppar den andra speldosan den första. Med Spotify
+Premium Family har varje familjemedlem ett eget konto utan extra kostnad. Ge varje speldosa sitt eget:
+
+1. I Music Assistant: Inställningar, Music sources, **Add a music source**, Spotify, och logga in med den andra
+   familjemedlemmens konto. Music Assistant har nu två Spotify-konton.
+2. I Home Assistant: Inställningar, Enheter och tjänster, Speldosa, **Konfigurera** på den ena speldosan.
+   **Musikkonto** visas när Music Assistant har två konton för samma tjänst. Välj kontot för den här speldosan.
+3. Gör likadant på den andra speldosan med det andra kontot.
+
+Brickorna är gemensamma: alla brickor spelar på alla speldosor, via speldosans konto. Låt **Musikkonto** stå på
+det första valet för att spela varje bricka via kontot den kopplades med.
 
 ## Ljus och ljud
 
 | Lampan | Betyder |
 |---|---|
-| Lyser grönt | Redo, inget kort på |
-| Lyser gult | Ett kort ligger på och spelar |
+| Lyser grönt | Redo, ingen bricka på |
+| Lyser gult | En bricka ligger på och spelar |
 | Gult, halvt ljus | Pausad |
-| Kort vit blink | Ett kort lästes |
-| Blinkar rosa, två ljud | Kortet har ingen musik ännu: koppla det på sidan Speldosa |
+| Kort vit blink | En bricka lästes |
+| Blinkar rosa, två ljud | Brickan har ingen musik ännu: koppla den på sidan Speldosa |
 | Pulserar orange | Inget Wi-Fi |
 | Pulserar blått | Ingen kontakt med Home Assistant |
 | Blinkar rött | Något gick fel: Home Assistant visar ett meddelande med orsaken |
@@ -137,7 +152,8 @@ under Inställningar, Enheter och tjänster, Speldosa, **Konfigurera**.
 | Blinkar rött och "kunde inte spela" | Meddelandet säger varför. Vanliga orsaker: högtalaren är av, eller musiktjänsten spelar på en annan högtalare. Spotify spelar på en högtalare i taget |
 | Blinkar rött och "Problem med läsaren" på sidan | Dra ur sladden några sekunder och sätt i den igen |
 | Sökningen är långsam eller hittar inget | Spotify begränsar Music Assistants sökningar ("rate limit"; i Music Assistants logg står "Spotify Rate Limiter" eller "asked to wait ... seconds"). Vänta en minut och sök igen. Varaktigt: skapa en egen gratis Spotify developer-app och ange dess Client ID i Music Assistant, Inställningar, Providers, Spotify; med det delade standard-ID:t nås gränsen snabbt. Det löste det hos oss (2026-11-26) |
-| Kortet spelar fel sak | Sidan Speldosa, kortet, **Ändra** |
+| Brickan spelar fel sak | Sidan Speldosa, brickan, **Ändra** |
+| Den ena speldosan stannar när den andra startar | Båda spelar via samma Spotify-konto. Ge varje speldosa sitt eget (Två speldosor som spelar samtidigt) |
 
 ## Uppdateringar
 

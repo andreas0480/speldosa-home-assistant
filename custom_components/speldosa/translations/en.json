@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Add a Speldosa box",
-        "description": "Pick the box and the speaker it plays on. The box shows up under ESPHome once it is added. Cards are linked on the Speldosa page in the sidebar.",
+        "description": "Pick the box and the speaker it plays on. The box shows up under ESPHome once it is added. Tags are linked on the Speldosa page in the sidebar.",
         "data": {
           "device_id": "Box",
           "player": "Speaker (Music Assistant)"
@@ -11,7 +11,7 @@
       }
     },
     "error": {
-      "not_a_box": "This device has no Card sensor. Is it a Speldosa box with current firmware?",
+      "not_a_box": "This device has no Tag sensor. Is it a Speldosa box with current firmware?",
       "not_ma_player": "Pick a speaker that comes from Music Assistant."
     },
     "abort": {
@@ -23,17 +23,19 @@
     "step": {
       "init": {
         "title": "Box settings",
-        "description": "Cards are linked on the Speldosa page in the sidebar.",
+        "description": "Tags are linked on the Speldosa page in the sidebar.",
         "data": {
           "player": "Speaker (Music Assistant)",
           "resume_window_min": "Keep the place for",
           "start_volume": "Start volume",
-          "solo": "Play only on this speaker"
+          "solo": "Play only on this speaker",
+          "music_account": "Music account"
         },
         "data_description": {
-          "resume_window_min": "A card put back within this time continues where it stopped, whatever its play mode.",
+          "resume_window_min": "A tag put back within this time continues where it stopped, whatever its play mode.",
           "start_volume": "Volume when a new album, song or story starts. 0 leaves the volume as it is.",
-          "solo": "Takes the speaker out of a speaker group first, so the box plays only in its own room."
+          "solo": "Takes the speaker out of a speaker group first, so the box plays only in its own room.",
+          "music_account": "With two accounts of a music service in Music Assistant (for example two Spotify family members), pick the one this box plays through, so two boxes can play at the same time. Tags stay shared: any tag plays on any box."
         }
       }
     },
@@ -42,17 +44,17 @@
     }
   },
   "exceptions": {
-    "unknown_card_title": {
-      "message": "Speldosa: new card"
+    "unknown_tag_title": {
+      "message": "Speldosa: new tag"
     },
-    "unknown_card": {
-      "message": "Card {card} was put on **{box}** and has no music yet. Open Speldosa in the sidebar to link it, and leave the card on the box while you do."
+    "unknown_tag": {
+      "message": "Tag {tag} was put on **{box}** and has no music yet. Open Speldosa in the sidebar to link it, and leave the tag on the box while you do."
     },
     "play_failed_title": {
       "message": "Speldosa: could not play"
     },
     "play_failed": {
-      "message": "**{box}** could not play {card}: {error}"
+      "message": "**{box}** could not play {tag}: {error}"
     }
   }
 }

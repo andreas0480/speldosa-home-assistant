@@ -24,7 +24,7 @@ export class SpeldosaApi {
 
   link({ uid, item, name, mode, boxId, episodes }) {
     const msg = {
-      type: "speldosa/card/link",
+      type: "speldosa/tag/link",
       uid,
       uri: item.uri,
       media_type: item.media_type,
@@ -45,20 +45,20 @@ export class SpeldosaApi {
     return this.hass.callWS(msg);
   }
 
-  card(uid) {
-    return this.hass.callWS({ type: "speldosa/card/get", uid });
+  tag(uid) {
+    return this.hass.callWS({ type: "speldosa/tag/get", uid });
   }
 
   update(uid, changes) {
-    return this.hass.callWS({ type: "speldosa/card/update", uid, ...changes });
+    return this.hass.callWS({ type: "speldosa/tag/update", uid, ...changes });
   }
 
   unlink(uid) {
-    return this.hass.callWS({ type: "speldosa/card/unlink", uid });
+    return this.hass.callWS({ type: "speldosa/tag/unlink", uid });
   }
 
   tryPlay(item, mode, boxId) {
-    const msg = { type: "speldosa/card/try", uri: item.uri, media_type: item.media_type };
+    const msg = { type: "speldosa/tag/try", uri: item.uri, media_type: item.media_type };
     if (mode) msg.mode = mode;
     if (boxId) msg.box_id = boxId;
     return this.hass.callWS(msg);

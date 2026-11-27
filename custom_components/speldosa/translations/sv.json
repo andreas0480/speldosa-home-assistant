@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Lägg till en speldosa",
-        "description": "Välj speldosan och högtalaren den spelar på. Speldosan syns under ESPHome när den är tillagd. Korten kopplas på sidan Speldosa i sidofältet.",
+        "description": "Välj speldosan och högtalaren den spelar på. Speldosan syns under ESPHome när den är tillagd. Brickorna kopplas på sidan Speldosa i sidofältet.",
         "data": {
           "device_id": "Speldosa",
           "player": "Högtalare (Music Assistant)"
@@ -11,7 +11,7 @@
       }
     },
     "error": {
-      "not_a_box": "Enheten har ingen kortsensor. Är det en speldosa med aktuell programvara?",
+      "not_a_box": "Enheten har ingen brick-sensor (Tag). Är det en speldosa med aktuell programvara?",
       "not_ma_player": "Välj en högtalare från Music Assistant."
     },
     "abort": {
@@ -23,17 +23,19 @@
     "step": {
       "init": {
         "title": "Inställningar för speldosan",
-        "description": "Korten kopplas på sidan Speldosa i sidofältet.",
+        "description": "Brickorna kopplas på sidan Speldosa i sidofältet.",
         "data": {
           "player": "Högtalare (Music Assistant)",
           "resume_window_min": "Kom ihåg var det var i",
           "start_volume": "Startvolym",
-          "solo": "Spela bara på den här högtalaren"
+          "solo": "Spela bara på den här högtalaren",
+          "music_account": "Musikkonto"
         },
         "data_description": {
-          "resume_window_min": "Ett kort som läggs tillbaka inom den här tiden fortsätter där det slutade, oavsett hur kortet är inställt att spela.",
+          "resume_window_min": "En bricka som läggs tillbaka inom den här tiden fortsätter där den slutade, oavsett hur brickan är inställd att spela.",
           "start_volume": "Volymen när ett nytt album, en låt eller en saga börjar. 0 låter volymen vara.",
-          "solo": "Tar först ut högtalaren ur en högtalargrupp, så att speldosan bara spelar i sitt eget rum."
+          "solo": "Tar först ut högtalaren ur en högtalargrupp, så att speldosan bara spelar i sitt eget rum.",
+          "music_account": "Har Music Assistant två konton för samma musiktjänst (till exempel två medlemmar i ett Spotify-familjeabonnemang), välj det som den här speldosan spelar via, så kan två speldosor spela samtidigt. Brickorna är gemensamma: alla brickor spelar på alla speldosor."
         }
       }
     },
@@ -42,17 +44,17 @@
     }
   },
   "exceptions": {
-    "unknown_card_title": {
-      "message": "Speldosa: nytt kort"
+    "unknown_tag_title": {
+      "message": "Speldosa: ny bricka"
     },
-    "unknown_card": {
-      "message": "Kort {card} lades på **{box}** och har ingen musik ännu. Öppna Speldosa i sidofältet för att koppla det, och låt kortet ligga kvar på speldosan under tiden."
+    "unknown_tag": {
+      "message": "Bricka {tag} lades på **{box}** och har ingen musik ännu. Öppna Speldosa i sidofältet för att koppla den, och låt brickan ligga kvar på speldosan under tiden."
     },
     "play_failed_title": {
       "message": "Speldosa: kunde inte spela"
     },
     "play_failed": {
-      "message": "**{box}** kunde inte spela {card}: {error}"
+      "message": "**{box}** kunde inte spela {tag}: {error}"
     }
   }
 }

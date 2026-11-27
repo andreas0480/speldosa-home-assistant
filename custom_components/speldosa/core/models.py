@@ -1,4 +1,4 @@
-"""Cards, play modes and the defaults per media type."""
+"""Tags, play modes and the defaults per media type."""
 
 from __future__ import annotations
 
@@ -9,12 +9,12 @@ from typing import Any
 
 
 class PlayMode(StrEnum):
-    """How a card plays when it is put on a box after the resume window."""
+    """How a tag plays when it is put on a box after the resume window."""
 
     FROM_START = "from_start"
     SHUFFLE = "shuffle"
     RESUME = "resume"
-    # Series: one album (artist cards) or one episode (podcast cards) at a time, played whole.
+    # Series: one album (artist tags) or one episode (podcast tags) at a time, played whole.
     RANDOM_ALBUM = "random_album"
     NEXT_ALBUM = "next_album"
     RANDOM_EPISODE = "random_episode"
@@ -26,7 +26,7 @@ SERIES_MODES = frozenset(
 )
 RANDOM_SERIES_MODES = frozenset({PlayMode.RANDOM_ALBUM, PlayMode.RANDOM_EPISODE})
 
-# Music Assistant media types a card can link to.
+# Music Assistant media types a tag can link to.
 MEDIA_TYPES = ("artist", "album", "playlist", "audiobook", "podcast", "track", "radio", "folder")
 
 _MODES: dict[str, tuple[PlayMode, ...]] = {
@@ -52,7 +52,7 @@ def default_mode(media_type: str) -> PlayMode:
 
 @dataclass
 class Position:
-    """Where a card stopped: the queue item playing and the seconds into it."""
+    """Where a tag stopped: the queue item playing and the seconds into it."""
 
     item_uri: str | None
     elapsed: int
@@ -76,7 +76,7 @@ def episode_number(title: str) -> int | None:
 
 @dataclass
 class Episode:
-    """One album of an artist card, or one episode of a podcast card."""
+    """One album of an artist tag, or one episode of a podcast tag."""
 
     uri: str
     title: str
@@ -136,8 +136,8 @@ def number_order(episodes: list[Episode]) -> list[str]:
 
 
 @dataclass
-class Card:
-    """One linked card."""
+class Tag:
+    """One linked tag."""
 
     uid: str
     name: str
@@ -166,7 +166,7 @@ class Card:
         return data
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Card:
+    def from_dict(cls, data: dict[str, Any]) -> Tag:
         media_type = data.get("media_type") or "playlist"
         mode = data.get("mode")
         if mode is None:
@@ -208,8 +208,8 @@ class Card:
 
 
 @dataclass
-class SeenCard:
-    """A card a box read that is not linked yet."""
+class SeenTag:
+    """A tag a box read that is not linked yet."""
 
     uid: str
     last_seen: float

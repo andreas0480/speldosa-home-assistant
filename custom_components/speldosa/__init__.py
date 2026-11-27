@@ -1,4 +1,4 @@
-"""Speldosa: put a card on the box and its music plays through Music Assistant."""
+"""Speldosa: put a tag on the box and its music plays through Music Assistant."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.translation import async_get_translations
 
 from .const import (
+    CONF_ACCOUNT,
     CONF_DEVICE_ID,
     CONF_PLAYER,
     CONF_RESUME_WINDOW,
@@ -29,15 +30,15 @@ from .helpers import find_box_entities
 from .image import ImageProxy, ImageView
 from .music import SearchCache
 from .panel import async_register_panel, async_remove_panel
-from .store import CardStore
+from .store import TagStore
 from .websocket import async_refresh_stale_episodes, async_register
 
 
 @dataclass
 class SpeldosaData:
-    """Shared by every box: the card links, the search cache, the image proxy and the boxes."""
+    """Shared by every box: the tag links, the search cache, the image proxy and the boxes."""
 
-    store: CardStore
+    store: TagStore
     images: ImageProxy
     search_cache: SearchCache = field(default_factory=SearchCache)
     controllers: dict[str, BoxController] = field(default_factory=dict)
@@ -53,7 +54,7 @@ async def async_get_data(hass: HomeAssistant) -> SpeldosaData:
 async def _async_create_data(hass: HomeAssistant) -> SpeldosaData:
     data: SpeldosaData | None = hass.data.get(DOMAIN)
     if data is None:
-        store = CardStore(hass)
+        store = TagStore(hass)
         await store.async_load()
         images = ImageProxy(hass)
         hass.http.register_view(ImageView(images))
@@ -88,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_id = entry.data[CONF_DEVICE_ID]
     entities = find_box_entities(hass, device_id)
     if entities is None:
-        raise ConfigEntryNotReady("The box's Card sensor is not in Home Assistant yet")
+        raise ConfigEntryNotReady("The box's Tag sensor is not in Home Assistant yet")
     device = dr.async_get(hass).async_get(device_id)
     name = (device.name_by_user or device.name) if device else entry.title
     area = None
@@ -102,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_id=entry.entry_id,
         name=name or entry.title,
         area=area,
-        card_entity=entities.card,
+        tag_entity=entities.tag,
         status_entity=entities.status,
         reader_problem_entity=entities.reader_problem,
         player=player,
@@ -110,6 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         resume_window_s=float(window_min) * 60,
         start_volume=float(volume_pct) / 100 if volume_pct else None,
         solo=bool(entry.options.get(CONF_SOLO, DEFAULT_SOLO)),
+        account=entry.options.get(CONF_ACCOUNT) or None,
         translate=_translator(hass),
         on_change=lambda: async_dispatcher_send(hass, SIGNAL_CHANGED),
     )

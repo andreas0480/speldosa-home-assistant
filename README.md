@@ -1,17 +1,17 @@
 # Speldosa for Home Assistant
 
-Speldosa is a screen-free music box for children. Put a card on the box and the music, story or audiobook linked
-to it plays on a speaker in the room through Music Assistant. Lift the card and it pauses. Put it back and it
-continues.
+Speldosa is a screen-free music box for children. Put a tag on the box and the music, story or audiobook linked
+to it plays on a speaker in the room through Music Assistant. Lift the tag and it pauses. Put it back and it
+continues. A tag is a card, coin or sticker with an NFC chip.
 
 This repository holds the box's firmware (ESPHome) and the Home Assistant integration with its page for linking
-cards. The box hardware is not part of it.
+tags. The box hardware is not part of it.
 
 **Status: beta.** Tested with Home Assistant 2026.11 and Music Assistant 2.10 with Spotify and Sonos speakers.
 
 ## Install
 
-The full guide, from Wi-Fi to the first card: **[setup guide](docs/setup-guide.md)** ·
+The full guide, from Wi-Fi to the first tag: **[setup guide](docs/setup-guide.md)** ·
 **[på svenska](docs/setup-guide.sv.md)**.
 
 In short, with Home Assistant 2026.10 or later, HACS and Music Assistant already set up:
@@ -20,9 +20,9 @@ In short, with Home Assistant 2026.10 or later, HACS and Music Assistant already
 2. HACS, Custom repositories: add `https://github.com/andreas0480/speldosa-home-assistant` as an Integration,
    download **Speldosa**, restart Home Assistant.
 3. Settings, Devices and services, Add integration, **Speldosa**: pick the box and its speaker.
-4. Open **Speldosa** in the sidebar and link the cards.
+4. Open **Speldosa** in the sidebar and link the tags.
 
-## Card choices
+## Tag choices
 
 | Choice | For |
 |---|---|
@@ -32,8 +32,8 @@ In short, with Home Assistant 2026.10 or later, HACS and Music Assistant already
 | Continue where it stopped | Audiobooks |
 | A random or the next episode | Podcasts |
 
-A card lifted and put back within 15 minutes always continues. A series album lifted halfway continues from that
-spot later, however much later, and the card moves on only when the album has been heard to the end. The page
+A tag lifted and put back within 15 minutes always continues. A series album lifted halfway continues from that
+spot later, however much later, and the tag moves on only when the album has been heard to the end. The page
 lists an artist's albums so you can choose which count as episodes; specials such as advent calendars are left out
 by default.
 
@@ -77,7 +77,7 @@ firmware/build.sh compile speldosa-phase2-pn532
 ### Security defaults
 
 - The image has no Wi-Fi credentials and no open fallback hotspot. Wi-Fi is set over USB (Improv serial) or
-  Bluetooth (Improv BLE, allowed for two minutes after a card is put on the box).
+  Bluetooth (Improv BLE, allowed for two minutes after a tag is put on the box).
 - The API uses encryption with no key in the image: Home Assistant sets a key for each box when it adds it.
 - Open: the ESPHome OTA port has no password, and firmware updates are checked by MD5 only.
 

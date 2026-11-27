@@ -18,12 +18,18 @@ CONF_START_VOLUME = "start_volume"
 DEFAULT_START_VOLUME = 40
 CONF_SOLO = "solo"
 DEFAULT_SOLO = True
+# Which music account (Music Assistant provider instance) this box plays through; "" plays as linked.
+CONF_ACCOUNT = "music_account"
+ACCOUNT_AS_LINKED = ""
 
 # Entity names in the firmware (firmware/packages/core.yaml).
-CARD_ENTITY_NAME = "Card"
+TAG_ENTITY_NAME = "Tag"
+# Firmware before 0.2.0 calls the sensor "Card" and the status option "unknown_card".
+LEGACY_TAG_ENTITY_NAME = "Card"
+LEGACY_STATUS = {"unknown_tag": "unknown_card"}
 STATUS_ENTITY_NAME = "Status"
 READER_PROBLEM_NAME = "Reader problem"
-NO_CARD = "none"
+NO_TAG = "none"
 
 STATUS_ERROR = "error"
 
@@ -42,6 +48,8 @@ PANEL_COMPONENT = "speldosa-panel"
 STATIC_URL = "/speldosa_static"
 IMAGE_URL = "/api/speldosa/image"
 
-EVENT_UNKNOWN_CARD = f"{DOMAIN}_unknown_card"
-EVENT_CARD = f"{DOMAIN}_card"
+EVENT_UNKNOWN_TAG = f"{DOMAIN}_unknown_tag"
+EVENT_TAG = f"{DOMAIN}_tag"
+# Fired as well, for automations written before 0.4.0
+LEGACY_EVENTS = {EVENT_UNKNOWN_TAG: f"{DOMAIN}_unknown_card", EVENT_TAG: f"{DOMAIN}_card"}
 SIGNAL_CHANGED = f"{DOMAIN}_changed"

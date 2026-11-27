@@ -10,7 +10,7 @@ import pytest
 
 from custom_components.speldosa.core import (
     BoxState,
-    Card,
+    Tag,
     Episode,
     PlayMode,
     Position,
@@ -36,19 +36,19 @@ def kinds(decision):
     return [a.kind for a in decision.actions]
 
 
-def card(**kw):
-    base = dict(uid="U1", name="Card", uri="spotify://playlist/p", media_type="playlist", mode=PlayMode.FROM_START)
+def tag(**kw):
+    base = dict(uid="U1", name="Tag", uri="spotify://playlist/p", media_type="playlist", mode=PlayMode.FROM_START)
     base.update(kw)
-    return Card(**base)
+    return Tag(**base)
 
 
 def series(mode=PlayMode.RANDOM_ALBUM, n=4, **kw):
     episodes = [Episode(uri=f"spotify://album/e{i}", title=f"{i:03d}/Folge {i}", number=i) for i in range(1, n + 1)]
-    return card(uri="spotify://artist/d", media_type="artist", mode=mode, episodes=episodes, **kw)
+    return tag(uri="spotify://artist/d", media_type="artist", mode=mode, episodes=episodes, **kw)
 
 
 def run(c, decision):
-    """Apply the store-side actions of a decision to the card, as the controller does."""
+    """Apply the store-side actions of a decision to the tag, as the controller does."""
     for a in decision.actions:
         if a.kind == "series_started":
             apply_series_started(c, a.uri, a.order, a.order_pos)
@@ -88,32 +88,32 @@ def test_series_modes_only_for_artists_and_podcasts():
         assert not {PlayMode.RANDOM_ALBUM, PlayMode.RANDOM_EPISODE} & set(modes_for(media_type))
 
 
-def test_card_round_trip():
+def test_tag_round_trip():
     c = series(position=Position("spotify://track/t", 42, 1.0), order=["a", "b"], order_pos=1, current="a", heard=3)
-    assert Card.from_dict(c.to_dict()) == c
+    assert Tag.from_dict(c.to_dict()) == c
 
 
-def test_card_from_store_v1():
+def test_tag_from_store_v1():
     v1 = {"uid": "U", "name": "Bibi", "uri": "x://audiobook/b", "media_type": "audiobook", "shuffle": False,
           "resume": {"elapsed": 754}}
-    c = Card.from_dict(v1)
+    c = Tag.from_dict(v1)
     assert c.mode is PlayMode.RESUME
     assert c.position.elapsed == 754 and c.position.item_uri is None
-    shuffled = Card.from_dict({"uid": "S", "name": "S", "uri": "x://playlist/p", "media_type": "playlist",
+    shuffled = Tag.from_dict({"uid": "S", "name": "S", "uri": "x://playlist/p", "media_type": "playlist",
                                "shuffle": True, "resume": None})
     assert shuffled.mode is PlayMode.SHUFFLE
 
 
-def test_card_from_store_v2_random_episode_artist():
+def test_tag_from_store_v2_random_episode_artist():
     v2 = {"uid": "D", "name": "Die drei ??? Kids", "uri": "x://artist/d", "media_type": "artist",
           "mode": "random_episode", "episodes": ["x://album/1", "x://album/2"], "last_episode": "x://album/1"}
-    c = Card.from_dict(v2)
+    c = Tag.from_dict(v2)
     assert c.mode is PlayMode.RANDOM_ALBUM
     assert [e.uri for e in c.episodes] == ["x://album/1", "x://album/2"] and all(e.included for e in c.episodes)
 
 
 def test_invalid_mode_falls_back_to_default():
-    c = Card.from_dict({"uid": "U", "name": "N", "uri": "x://album/a", "media_type": "album",
+    c = Tag.from_dict({"uid": "U", "name": "N", "uri": "x://album/a", "media_type": "album",
                         "mode": "random_album"})
     assert c.mode is PlayMode.FROM_START
 
@@ -202,20 +202,20 @@ def test_number_order():
 # Playback ----------------------------------------------------------------------
 
 
-def test_unknown_card():
+def test_unknown_tag():
     d = on_placed(None, "X", BoxState(), "idle", 0)
-    assert kinds(d) == ["status", "unknown_card"]
+    assert kinds(d) == ["status", "unknown_tag"]
     assert d.state.active_uid is None
 
 
 def test_from_start_plays_in_order():
-    d = on_placed(card(), "U1", BoxState(), "idle", 0)
+    d = on_placed(tag(), "U1", BoxState(), "idle", 0)
     assert kinds(d) == ["play", "status"]
     assert d.actions[0].shuffle is False and d.actions[0].fresh is True
 
 
 def test_shuffle_mode():
-    assert on_placed(card(mode=PlayMode.SHUFFLE), "U1", BoxState(), "idle", 0).actions[0].shuffle is True
+    assert on_placed(tag(mode=PlayMode.SHUFFLE), "U1", BoxState(), "idle", 0).actions[0].shuffle is True
 
 
 def test_lift_while_playing_saves_and_pauses():
@@ -225,7 +225,7 @@ def test_lift_while_playing_saves_and_pauses():
 
 
 def test_lift_while_paused_saves_without_pausing():
-    """A parent paused from the app, then the child lifts the card: the place is kept."""
+    """A parent paused from the app, then the child lifts the tag: the place is kept."""
     d = on_lifted(BoxState(active_uid="U1"), "paused", 100)
     assert kinds(d) == ["save_position", "status"]
 
@@ -236,7 +236,7 @@ def test_lift_when_idle_goes_idle():
 
 
 def test_put_back_within_window_resumes_any_mode():
-    for c in (card(), card(mode=PlayMode.SHUFFLE), series(), series(PlayMode.NEXT_ALBUM)):
+    for c in (tag(), tag(mode=PlayMode.SHUFFLE), series(), series(PlayMode.NEXT_ALBUM)):
         state = BoxState(paused_uid="U1", lifted_at=100, paused_content="spotify://track/t1")
         d = on_placed(c, "U1", state, "paused", 160, player_content="spotify://track/t1")
         assert kinds(d) == ["resume", "status"], c.mode
@@ -248,9 +248,9 @@ def test_lift_remembers_what_the_speaker_played():
 
 
 def test_something_else_played_in_between_is_not_resumed():
-    """Found 2026-11-22: a parent played something else in Music Assistant and paused it; putting the card back
-    pressed play on that. The card now starts its own content again, from its place."""
-    c = card(position=Position("spotify://track/t3", 30, 0))
+    """Found 2026-11-22: a parent played something else in Music Assistant and paused it; putting the tag back
+    pressed play on that. The tag now starts its own content again, from its place."""
+    c = tag(position=Position("spotify://track/t3", 30, 0))
     state = BoxState(paused_uid="U1", lifted_at=100, paused_content="spotify://track/t3")
     d = on_placed(c, "U1", state, "paused", 160, player_content="spotify://track/other")
     assert kinds(d) == ["play", "seek", "status"]
@@ -259,30 +259,30 @@ def test_something_else_played_in_between_is_not_resumed():
 
 def test_unknown_speaker_content_is_not_resumed():
     state = BoxState(paused_uid="U1", lifted_at=100)
-    d = on_placed(card(), "U1", state, "paused", 160, player_content=None)
+    d = on_placed(tag(), "U1", state, "paused", 160, player_content=None)
     assert kinds(d)[0] == "play"
 
 
 def test_put_back_after_window_from_start_restarts():
-    d = on_placed(card(), "U1", BoxState(paused_uid="U1", lifted_at=0), "paused", 3600)
+    d = on_placed(tag(), "U1", BoxState(paused_uid="U1", lifted_at=0), "paused", 3600)
     assert kinds(d) == ["play", "status"] and d.actions[0].start_item is None
 
 
 def test_within_window_player_stopped_uses_saved_position():
-    c = card(position=Position("spotify://track/t3", 30, 0))
+    c = tag(position=Position("spotify://track/t3", 30, 0))
     d = on_placed(c, "U1", BoxState(paused_uid="U1", lifted_at=0), "idle", 10)
     assert kinds(d) == ["play", "seek", "status"]
     assert d.actions[0].start_item == "spotify://track/t3" and d.actions[1].position == 30
 
 
 def test_resume_mode_after_window():
-    c = card(mode=PlayMode.RESUME, position=Position("spotify://track/t9", 75, 0))
+    c = tag(mode=PlayMode.RESUME, position=Position("spotify://track/t9", 75, 0))
     d = on_placed(c, "U1", BoxState(), "idle", 10_000)
     assert kinds(d) == ["play", "seek", "status"] and d.actions[0].start_item == "spotify://track/t9"
 
 
 def test_audiobook_position_without_item_seeks_only():
-    c = card(media_type="audiobook", mode=PlayMode.RESUME, position=Position(None, 754, 0))
+    c = tag(media_type="audiobook", mode=PlayMode.RESUME, position=Position(None, 754, 0))
     d = on_placed(c, "U1", BoxState(), "idle", 0)
     assert d.actions[0].start_item is None and d.actions[1].position == 754
 
@@ -367,20 +367,20 @@ def test_changed_selection_rebuilds_the_order():
 
 
 def test_series_without_albums_shuffles_the_artist():
-    c = card(uri="spotify://artist/d", media_type="artist", mode=PlayMode.RANDOM_ALBUM)
+    c = tag(uri="spotify://artist/d", media_type="artist", mode=PlayMode.RANDOM_ALBUM)
     d = on_placed(c, "U1", BoxState(), "idle", 0)
     assert kinds(d) == ["play", "status"] and d.actions[0].shuffle is True
 
 
 def test_podcast_episode_has_no_media_type():
-    c = card(uri="spotify://podcast/p", media_type="podcast", mode=PlayMode.NEXT_EPISODE,
+    c = tag(uri="spotify://podcast/p", media_type="podcast", mode=PlayMode.NEXT_EPISODE,
              episodes=[Episode("spotify://episode/1", "Ep 1", 1)])
     d = on_placed(c, "U1", BoxState(), "idle", 0)
     assert d.actions[1].uri == "spotify://episode/1" and d.actions[1].media_type is None
 
 
 def test_heard_audiobook_starts_from_the_beginning():
-    c = card(media_type="audiobook", mode=PlayMode.RESUME, position=Position(None, 7200, 0))
+    c = tag(media_type="audiobook", mode=PlayMode.RESUME, position=Position(None, 7200, 0))
     assert kinds(on_finished(c)) == ["heard", "status"]
     apply_heard(c)
     assert c.position is None
@@ -450,3 +450,26 @@ def test_subtitle_from_artists_or_album():
                             "album": {"name": "Blåsbus 2 saxofon"}}]}
     item = rank_results("Bamse", response)["groups"][0]["items"][0]
     assert item["subtitle"] == "Blåsbus 2 saxofon"
+
+
+# Music accounts (0.4.0) ---------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("uri", "account", "expected"),
+    [
+        ("spotify--Vf8xo62o://album/1", "spotify--Kid2abcd", "spotify--Kid2abcd://album/1"),
+        ("spotify://playlist/2", "spotify--Kid2abcd", "spotify--Kid2abcd://playlist/2"),
+        ("spotify--Vf8xo62o://track/3", "spotify", "spotify://track/3"),
+        ("spotify--Vf8xo62o://album/1", None, "spotify--Vf8xo62o://album/1"),
+        ("spotify--Vf8xo62o://album/1", "", "spotify--Vf8xo62o://album/1"),
+        ("tidal--abc://album/1", "spotify--Kid2abcd", "tidal--abc://album/1"),
+        ("library://album/7", "spotify--Kid2abcd", "library://album/7"),
+        ("https://example.com/stream.mp3", "spotify--Kid2abcd", "https://example.com/stream.mp3"),
+        (None, "spotify--Kid2abcd", None),
+    ],
+)
+def test_with_account(uri, account, expected) -> None:
+    from custom_components.speldosa.core import with_account
+
+    assert with_account(uri, account) == expected

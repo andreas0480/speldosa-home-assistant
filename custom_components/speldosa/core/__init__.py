@@ -1,16 +1,17 @@
-"""Speldosa core: what a card does, independent of Home Assistant.
+"""Speldosa core: what a tag does, independent of Home Assistant.
 
 Nothing in this package imports Home Assistant (a test checks it). The Home Assistant integration feeds it events
 and carries out the actions it returns; a standalone Speldosa hub can do the same with other connectors.
 """
 
+from .accounts import provider_domain, with_account
 from .models import (
     SERIES_MODES,
-    Card,
+    Tag,
     Episode,
     PlayMode,
     Position,
-    SeenCard,
+    SeenTag,
     default_mode,
     merge_episodes,
     modes_for,
@@ -23,11 +24,11 @@ __all__ = [
     "SERIES_MODES",
     "Action",
     "BoxState",
-    "Card",
+    "Tag",
     "Episode",
     "PlayMode",
     "Position",
-    "SeenCard",
+    "SeenTag",
     "default_mode",
     "is_finished",
     "merge_episodes",
@@ -36,5 +37,7 @@ __all__ = [
     "on_lifted",
     "on_placed",
     "rank_results",
+    "provider_domain",
     "suggest_episodes",
+    "with_account",
 ]

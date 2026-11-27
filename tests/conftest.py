@@ -14,7 +14,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 PLAYER = "media_player.kids_room"
-CARD = "sensor.speldosa_card"
+TAG = "sensor.speldosa_tag"
 STATUS = "select.speldosa_status"
 PROBLEM = "binary_sensor.speldosa_reader_problem"
 
@@ -100,7 +100,7 @@ def box(hass: HomeAssistant) -> str:
     )
     registry = er.async_get(hass)
     for domain, unique, name, object_id in (
-        ("sensor", "card", "Card", "speldosa_card"),
+        ("sensor", "tag", "Tag", "speldosa_tag"),
         ("select", "status", "Status", "speldosa_status"),
         ("binary_sensor", "reader_problem", "Reader problem", "speldosa_reader_problem"),
     ):
@@ -108,7 +108,7 @@ def box(hass: HomeAssistant) -> str:
             domain, "esphome", f"aabbccddeeff-{unique}", device_id=device.id, config_entry=esphome_entry,
             original_name=name, suggested_object_id=object_id,
         )
-    hass.states.async_set(CARD, "none")
+    hass.states.async_set(TAG, "none")
     hass.states.async_set(STATUS, "idle")
     hass.states.async_set(PROBLEM, "off")
     return device.id

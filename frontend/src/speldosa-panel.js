@@ -1,4 +1,4 @@
-// The Speldosa page in the Home Assistant sidebar: boxes, linked cards, and linking a card to Music
+// The Speldosa page in the Home Assistant sidebar: boxes, linked tags, and linking a tag to Music
 // Assistant content by search. Talks only to the integration's websocket API (api.js).
 import { LitElement, html, nothing } from "lit";
 import { SpeldosaApi, debounce } from "./api.js";
@@ -51,7 +51,7 @@ export class SpeldosaPanel extends LitElement {
   constructor() {
     super();
     this._overview = null;
-    this._view = "cards";
+    this._view = "tags";
     this._results = null;
     this._filter = null;
     this._query = "";
@@ -107,8 +107,8 @@ export class SpeldosaPanel extends LitElement {
     return boxes.find((b) => b.entry_id === boxId) || boxes[0];
   }
 
-  _boxWithCard(uid) {
-    return (this._overview?.boxes || []).find((b) => b.card === uid);
+  _boxWithTag(uid) {
+    return (this._overview?.boxes || []).find((b) => b.tag === uid);
   }
 
   _flash(text) {
@@ -145,7 +145,7 @@ export class SpeldosaPanel extends LitElement {
     if (editing && HAS_EPISODES.has(editing.media_type)) {
       this._episodesLoading = true;
       this._api
-        .card(uid)
+        .tag(uid)
         .then((r) => {
           if (r.episode_list?.length) {
             this._episodes = r.episode_list;
@@ -154,22 +154,22 @@ export class SpeldosaPanel extends LitElement {
         })
         .catch(() => (this._episodesLoading = false));
     }
-    const box = this._boxWithCard(uid) || this._box();
+    const box = this._boxWithTag(uid) || this._box();
     if (box) this._api.nowPlaying(box.entry_id).then((r) => (this._now = r)).catch(() => {});
   }
 
-  _openNewCard() {
-    const box = (this._overview?.boxes || []).find((b) => b.card && !b.card_linked);
+  _openNewTag() {
+    const box = (this._overview?.boxes || []).find((b) => b.tag && !b.tag_linked);
     if (!box) {
-      this._flash(this._t("no_card_on_box"));
+      this._flash(this._t("no_tag_on_box"));
       return;
     }
-    this._openLink(box.card);
+    this._openLink(box.tag);
   }
 
   _back() {
     this._search.cancel();
-    this._view = "cards";
+    this._view = "tags";
     this._load();
   }
 
@@ -188,7 +188,7 @@ export class SpeldosaPanel extends LitElement {
   async _runSearch(query) {
     const seq = ++this._searchSeq;
     this._searching = true;
-    const box = this._boxWithCard(this._uid) || this._box();
+    const box = this._boxWithTag(this._uid) || this._box();
     try {
       const result = await this._api.search(query, box?.entry_id);
       if (seq === this._searchSeq) this._results = result;
@@ -208,7 +208,7 @@ export class SpeldosaPanel extends LitElement {
   }
 
   async _loadEpisodes(item) {
-    const box = this._boxWithCard(this._uid) || this._box();
+    const box = this._boxWithTag(this._uid) || this._box();
     this._episodesLoading = true;
     const uri = item.uri;
     try {
@@ -234,8 +234,8 @@ export class SpeldosaPanel extends LitElement {
   async _link() {
     const item = this._selected;
     if (!item) return;
-    const box = this._boxWithCard(this._uid) || this._box();
-    const card = await this._call(() =>
+    const box = this._boxWithTag(this._uid) || this._box();
+    const tag = await this._call(() =>
       this._api.link({
         uid: this._uid,
         item,
@@ -245,8 +245,8 @@ export class SpeldosaPanel extends LitElement {
         episodes: this._seriesEpisodes(this._mode || item.mode),
       }),
     );
-    if (card) {
-      this._flash(this._t("linked_done", { name: card.name }));
+    if (tag) {
+      this._flash(this._t("linked_done", { name: tag.name }));
       this._back();
     }
   }
@@ -256,15 +256,15 @@ export class SpeldosaPanel extends LitElement {
     if (this._name.trim()) changes.name = this._name.trim();
     const episodes = this._seriesEpisodes(this._mode);
     if (episodes) changes.episodes = episodes.map(({ uri, title, number, included }) => ({ uri, title, number, included }));
-    const card = await this._call(() => this._api.update(this._uid, changes));
-    if (card) {
+    const tag = await this._call(() => this._api.update(this._uid, changes));
+    if (tag) {
       this._flash(this._t("saved"));
       this._back();
     }
   }
 
   async _tryItem(item, mode) {
-    const box = this._boxWithCard(this._uid) || this._box();
+    const box = this._boxWithTag(this._uid) || this._box();
     const r = await this._call(() => this._api.tryPlay(item, mode, box?.entry_id));
     if (r) this._flash(this._t("playing_on", { player: r.player_name }));
   }
@@ -284,7 +284,7 @@ export class SpeldosaPanel extends LitElement {
   render() {
     if (!this.hass) return nothing;
     return html`
-      ${this._view === "link" ? this._renderLink() : this._renderCards()}
+      ${this._view === "link" ? this._renderLink() : this._renderTags()}
       ${this._toast ? html`<div class="toast" role="status">${this._toast}</div>` : nothing}
     `;
   }
@@ -346,52 +346,52 @@ export class SpeldosaPanel extends LitElement {
     </fieldset>`;
   }
 
-  _renderCards() {
+  _renderTags() {
     const t = this._t;
     const ov = this._overview;
     if (!ov) {
       return html`${this._toolbar(t("title"))}
         <div class="message">${this._error ? html`<span class="error">${t("error", { error: this._error })}</span>` : "…"}</div>`;
     }
-    const newOnBox = ov.boxes.filter((b) => b.card && !b.card_linked);
+    const newOnBox = ov.boxes.filter((b) => b.tag && !b.tag_linked);
     return html`
       ${this._toolbar(t("title"))}
       <div class="content">
-        ${ov.boxes.length === 0 ? html`<div class="card"><div class="message">${t("no_box")}</div></div>` : nothing}
+        ${ov.boxes.length === 0 ? html`<div class="tag"><div class="message">${t("no_box")}</div></div>` : nothing}
         ${newOnBox.map(
           (b) => html`<div class="banner">
             ${icon(ICON.plus)}
             <div class="text">
-              <strong>${t("new_card_title", { box: b.name })}</strong>
-              ${t("new_card_text", { card: b.card })}
+              <strong>${t("new_tag_title", { box: b.name })}</strong>
+              ${t("new_tag_text", { tag: b.tag })}
             </div>
-            <button class="primary" @click=${() => this._openLink(b.card)}>${t("link_this")}</button>
+            <button class="primary" @click=${() => this._openLink(b.tag)}>${t("link_this")}</button>
           </div>`,
         )}
         ${ov.boxes.length
-          ? html`<section class="card">
-              <div class="card-title">${t("boxes")}</div>
+          ? html`<section class="tag">
+              <div class="tag-title">${t("boxes")}</div>
               ${ov.boxes.map((b) => this._renderBox(b))}
             </section>`
           : nothing}
-        <section class="card">
-          <div class="card-title">${t("linked_cards")} <span class="hint">${t("linked_hint")}</span></div>
-          ${ov.cards.length === 0 ? html`<div class="message">${t("no_cards")}</div>` : nothing}
+        <section class="tag">
+          <div class="tag-title">${t("linked_tags")} <span class="hint">${t("linked_hint")}</span></div>
+          ${ov.tags.length === 0 ? html`<div class="message">${t("no_tags")}</div>` : nothing}
           <div class="grid">
-            ${ov.cards.map((c) => this._renderCardTile(c))}
-            <button class="tile outlined" style="height:auto;min-height:200px;flex-direction:column" @click=${this._openNewCard}>
+            ${ov.tags.map((c) => this._renderTagTile(c))}
+            <button class="tile outlined" style="height:auto;min-height:200px;flex-direction:column" @click=${this._openNewTag}>
               ${icon(ICON.plus)}<span>${t("link_new")}</span><span class="secondary">${t("link_new_hint")}</span>
             </button>
           </div>
         </section>
         ${ov.seen.length
-          ? html`<section class="card">
-              <div class="card-title">${t("seen")}</div>
+          ? html`<section class="tag">
+              <div class="tag-title">${t("seen")}</div>
               ${ov.seen.map(
                 (s) => html`<div class="row">
                   <span class="grow"><strong>${s.uid}</strong></span>
-                  <span class="secondary grow">${this._boxWithCard(s.uid)
-                    ? t("on_box_now", { box: this._boxWithCard(s.uid).name })
+                  <span class="secondary grow">${this._boxWithTag(s.uid)
+                    ? t("on_box_now", { box: this._boxWithTag(s.uid).name })
                     : t("seen_on", { box: s.box || "", when: formatWhen(this.hass, s.last_seen) })}</span>
                   <button class="text" @click=${() => this._openLink(s.uid)}>${t("link")}</button>
                   <button class="text" @click=${() => this._forget(s.uid)}>${t("forget")}</button>
@@ -405,22 +405,22 @@ export class SpeldosaPanel extends LitElement {
 
   _renderBox(b) {
     const t = this._t;
-    // The card on the box: its name when linked, and always its card ID (Andreas, 2026-11-26)
-    const onBox = b.card ? (this._overview?.cards || []).find((c) => c.uid === b.card) : null;
-    let cardState = t("card_none");
-    if (b.card) cardState = onBox ? t("card_on_named", { name: onBox.name }) : t("card_on_unlinked");
+    // The tag on the box: its name when linked, and always its tag ID (Andreas, 2026-11-26)
+    const onBox = b.tag ? (this._overview?.tags || []).find((c) => c.uid === b.tag) : null;
+    let tagState = t("tag_none");
+    if (b.tag) tagState = onBox ? t("tag_on_named", { name: onBox.name }) : t("tag_on_unlinked");
     return html`<div class="row">
       <div class="grow">
         <div><strong>${b.name}</strong></div>
         <div class="secondary">${[b.area, t("plays_on", { player: b.player_name })].filter(Boolean).join(" · ")}</div>
-        ${b.card ? html`<div class="secondary card-id">${t("card_id", { card: b.card })}</div>` : nothing}
+        ${b.tag ? html`<div class="secondary tag-id">${t("tag_id", { tag: b.tag })}</div>` : nothing}
       </div>
-      ${b.available ? html`<span class="chip">${cardState}</span>` : html`<span class="chip warn">${t("offline")}</span>`}
+      ${b.available ? html`<span class="chip">${tagState}</span>` : html`<span class="chip warn">${t("offline")}</span>`}
       ${b.reader_problem ? html`<span class="chip warn">${t("reader_problem")}</span>` : html`<span class="chip">${t("reader_ok")}</span>`}
     </div>`;
   }
 
-  _renderCardTile(c) {
+  _renderTagTile(c) {
     const t = this._t;
     const player = this._box()?.player_name || "";
     const detail = [t(`type_${c.media_type}`), this._modeLabel(c.mode)];
@@ -429,7 +429,7 @@ export class SpeldosaPanel extends LitElement {
       ${this._cover(c.image)}
       <div class="body">
         <div class="name">${c.name}</div>
-        <div class="secondary card-id">${t("card_id", { card: c.uid })}</div>
+        <div class="secondary tag-id">${t("tag_id", { tag: c.uid })}</div>
         <div class="secondary">${detail.join(" · ")}</div>
         ${c.current ? html`<div class="secondary">${t("listening", { title: c.current })}</div>` : nothing}
       </div>
@@ -442,10 +442,10 @@ export class SpeldosaPanel extends LitElement {
 
   _renderLink() {
     const t = this._t;
-    const box = this._boxWithCard(this._uid);
+    const box = this._boxWithTag(this._uid);
     const title = this._editing
-      ? t("change_card_title", { name: this._editing.name })
-      : t("link_card_title", { card: this._uid });
+      ? t("change_tag_title", { name: this._editing.name })
+      : t("link_tag_title", { tag: this._uid });
     return html`
       ${this._toolbar(title, { back: true, aside: box ? t("on_box_now", { box: box.name }) : "" })}
       <div class="content">
@@ -470,7 +470,7 @@ export class SpeldosaPanel extends LitElement {
     const now = this._now?.now;
     if (!now?.track) return nothing;
     const t = this._t;
-    return html`<div class="card row" style="border-top:0">
+    return html`<div class="tag row" style="border-top:0">
       ${this._cover(now.album?.image || now.track.image, "thumb")}
       <div class="grow">
         <div class="secondary">${t("now_playing", { player: this._now.player_name })}</div>
@@ -489,7 +489,7 @@ export class SpeldosaPanel extends LitElement {
     if (!r) return nothing;
     if (r.error) return html`<div class="message error">${t("error", { error: r.error })}</div>`;
     if (r.empty) {
-      return html`<div class="card message">${t("empty")}
+      return html`<div class="tag message">${t("empty")}
         <div><button class="text" @click=${() => this._runSearch(this._query)}>${t("try_again")}</button></div></div>`;
     }
     const groups = r.groups.filter((g) => !this._filter || g.media_type === this._filter);
@@ -502,18 +502,18 @@ export class SpeldosaPanel extends LitElement {
         )}
       </div>
       ${best.length
-        ? html`<section class="card"><div class="card-title" style="font-size:16px">${t("best")}</div>
+        ? html`<section class="tag"><div class="tag-title" style="font-size:16px">${t("best")}</div>
             <div style="padding:0 8px 8px">${best.map((i) => this._renderLine(i, true))}</div></section>`
         : nothing}
       ${groups.map(
-        (g) => html`<section class="card"><div class="card-title" style="font-size:16px">${t(`group_${g.media_type}`)}</div>
+        (g) => html`<section class="tag"><div class="tag-title" style="font-size:16px">${t(`group_${g.media_type}`)}</div>
           ${g.media_type === "artist" || g.media_type === "track"
             ? html`<div style="padding:0 8px 8px">${g.items.map((i) => this._renderLine(i, g.media_type === "artist"))}</div>`
             : html`<div class="results">${g.items.map((i) => this._renderResult(i))}</div>`}
         </section>`,
       )}
       ${!this._filter && r.weaker.length
-        ? html`<section class="card"><div class="card-title" style="font-size:16px">${t("weaker")}
+        ? html`<section class="tag"><div class="tag-title" style="font-size:16px">${t("weaker")}
             <span class="hint">${t("weaker_hint")}</span></div>
             <div style="padding:0 8px 8px">${r.weaker.map((i) => this._renderLine(i))}</div></section>`
         : nothing}
@@ -544,12 +544,12 @@ export class SpeldosaPanel extends LitElement {
     const t = this._t;
     const item = this._selected;
     const editing = this._editing;
-    if (!item && !editing) return html`<div class="card"><div class="message">${t("pick_first")}</div></div>`;
+    if (!item && !editing) return html`<div class="tag"><div class="message">${t("pick_first")}</div></div>`;
     const shown = item || editing;
     const modes = shown.modes || [];
     const mode = this._mode || shown.mode;
-    const player = (this._boxWithCard(this._uid) || this._box())?.player_name || "";
-    return html`<div class="card">
+    const player = (this._boxWithTag(this._uid) || this._box())?.player_name || "";
+    return html`<div class="tag">
       ${shown.image ? html`<img class="hero" src=${shown.image} alt="" />` : nothing}
       <div class="inner">
         <div>
@@ -581,7 +581,7 @@ export class SpeldosaPanel extends LitElement {
                   : html`<button class="text" @click=${() => (this._confirmUnlink = true)}>${t("unlink")}</button>`}
                 <button class="primary" @click=${this._saveEdit}>${t("save")}</button>`
             : html`<button class="text" @click=${() => this._tryItem(item, mode)}>${t("try_on", { player })}</button>
-                <button class="primary" @click=${this._link}>${t("link_card")}</button>`}
+                <button class="primary" @click=${this._link}>${t("link_tag")}</button>`}
         </div>
       </div>
     </div>`;

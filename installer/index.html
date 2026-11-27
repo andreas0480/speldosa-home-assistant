@@ -16,7 +16,7 @@
   h2 { font-size:1.15rem; margin:2rem 0 .5rem; }
   p, li { margin:.4rem 0; }
   .muted { color:var(--muted); }
-  .card { background:var(--white); border:1px solid #d5dcd8; border-radius:12px; padding:1rem 1.25rem; }
+  .tag { background:var(--white); border:1px solid #d5dcd8; border-radius:12px; padding:1rem 1.25rem; }
   label { display:block; padding:.35rem 0; cursor:pointer; }
   esp-web-install-button button[slot="activate"] { background:var(--lingon); color:#fff; border:0; border-radius:999px; padding:.7rem 1.4rem; font-size:1rem; cursor:pointer; margin-top:.75rem; }
   .note { background:var(--sky); border-radius:12px; padding:.75rem 1rem; margin-top:1rem; }
@@ -32,7 +32,7 @@
   <p>You need Home Assistant with Music Assistant, a speaker that Music Assistant plays on, and a computer with Chrome or Edge. Takes about ten minutes.</p>
 
   <h2>1. Install the firmware</h2>
-  <div class="card">
+  <div class="tag">
     <p>Connect the box to this computer with a USB-C data cable. Pick your box:</p>
     <label><input type="radio" name="board" value="phase2-pn532" checked> Speldosa prototype (red reader board)</label>
     <label><input type="radio" name="board" value="phase2-pn7160"> Speldosa prototype (PN7160 reader)</label>
@@ -57,13 +57,13 @@
     <li>Settings, Devices and services, Add integration, <strong>Speldosa</strong>. Pick the box and the speaker it plays on.</li>
   </ol>
 
-  <h2>4. Link the cards</h2>
+  <h2>4. Link the tags</h2>
   <ol>
-    <li>Put a new card on the box. It blinks and Home Assistant tells you about a new card.</li>
-    <li>Open Speldosa, select <strong>Configure</strong>, then <strong>Link a card</strong>. Search for the album, playlist or audiobook, pick it, done. It starts playing.</li>
-    <li>Lift the card: the music pauses. Put it back: it continues.</li>
+    <li>Put a new tag on the box. It blinks and Home Assistant tells you about a new tag.</li>
+    <li>Open Speldosa, select <strong>Configure</strong>, then <strong>Link a tag</strong>. Search for the album, playlist or audiobook, pick it, done. It starts playing.</li>
+    <li>Lift the tag: the music pauses. Put it back: it continues.</li>
   </ol>
-  <p class="muted">Lights: orange pulse, no Wi-Fi. Blue pulse, no Home Assistant. Green, playing. Dim orange, paused. Pink blink, card not linked yet. Red blink, could not play (Home Assistant says why).</p>
+  <p class="muted">Lights: orange pulse, no Wi-Fi. Blue pulse, no Home Assistant. Green, playing. Dim orange, paused. Pink blink, tag not linked yet. Red blink, could not play (Home Assistant says why).</p>
 </main>
 <script>
   const button = document.getElementById("install");

@@ -1,4 +1,4 @@
-"""Rank and group Music Assistant search results for the card screen.
+"""Rank and group Music Assistant search results for the tag screen.
 
 Spotify returns loose matches for a series name ("Die drei ???" also finds "Die drei kleinen Schweinchen").
 Results are scored against the query, grouped by type, and loose matches go to a separate list.

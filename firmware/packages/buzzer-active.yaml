@@ -8,8 +8,8 @@ output:
     pin: ${buzzer_pin}
 
 script:
-  # card on: short then long ("ti-taa")
-  - id: sound_card_on
+  # tag on: short then long ("ti-taa")
+  - id: sound_tag_on
     mode: restart
     then:
       - output.turn_on: buzzer
@@ -19,8 +19,8 @@ script:
       - output.turn_on: buzzer
       - delay: 25ms
       - output.turn_off: buzzer
-  # card lifted: long then short ("taa-ti")
-  - id: sound_card_off
+  # tag lifted: long then short ("taa-ti")
+  - id: sound_tag_off
     mode: restart
     then:
       - output.turn_on: buzzer

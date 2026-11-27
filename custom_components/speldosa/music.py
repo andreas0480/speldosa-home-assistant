@@ -37,6 +37,30 @@ def ma_config_entry_id(hass: HomeAssistant, player: str) -> str | None:
     return entry.config_entry_id
 
 
+def music_accounts(hass: HomeAssistant, player: str) -> list[dict[str, str]]:
+    """Music services with more than one account in the player's Music Assistant: [{"id", "domain", "name"}].
+
+    Read from the Music Assistant client the integration keeps (entry.runtime_data.mass). Empty when that is not
+    reachable, or when no service has a second account.
+    """
+    entry_id = ma_config_entry_id(hass, player)
+    entry = hass.config_entries.async_get_entry(entry_id) if entry_id else None
+    mass = getattr(getattr(entry, "runtime_data", None), "mass", None)
+    try:
+        providers = list(getattr(mass, "providers", None) or [])
+    except Exception:  # noqa: BLE001 - a client we do not own; no accounts is a safe answer
+        return []
+    music = [p for p in providers if str(getattr(p, "type", "music")).lower().endswith("music")]
+    counts: dict[str, int] = {}
+    for p in music:
+        counts[p.domain] = counts.get(p.domain, 0) + 1
+    return [
+        {"id": p.instance_id, "domain": p.domain, "name": p.name or p.instance_id}
+        for p in sorted(music, key=lambda p: (p.domain, p.name or ""))
+        if counts[p.domain] > 1
+    ]
+
+
 class SearchCache:
     """Search answers per query for SEARCH_CACHE_S; empty answers (Spotify busy) are not kept."""
 

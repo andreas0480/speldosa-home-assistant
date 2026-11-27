@@ -1,6 +1,6 @@
 """Add a box (which Speldosa device, which Music Assistant speaker) and its two settings.
 
-Cards are linked on the Speldosa page in the sidebar, not here.
+Tags are linked on the Speldosa page in the sidebar, not here.
 """
 
 from __future__ import annotations
@@ -21,9 +21,15 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
 )
 
 from .const import (
+    ACCOUNT_AS_LINKED,
+    CONF_ACCOUNT,
     CONF_DEVICE_ID,
     CONF_PLAYER,
     CONF_RESUME_WINDOW,
@@ -38,7 +44,11 @@ from .const import (
     MANUFACTURER,
 )
 from .helpers import find_box_entities
-from .music import ma_config_entry_id
+from .music import ma_config_entry_id, music_accounts
+
+
+# The select's first choice; the accounts themselves are named by Music Assistant.
+AS_LINKED_LABEL = {"en": "The account each tag was linked with", "sv": "Kontot som varje bricka kopplades med"}
 
 
 def _player_selector() -> EntitySelector:
@@ -86,11 +96,12 @@ class SpeldosaConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class SpeldosaOptionsFlow(OptionsFlow):
-    """The box's speaker and how long a lifted card keeps its place."""
+    """The box's speaker and how long a lifted tag keeps its place."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         current_player = self.config_entry.options.get(CONF_PLAYER, self.config_entry.data[CONF_PLAYER])
+        options_account = self.config_entry.options.get(CONF_ACCOUNT, ACCOUNT_AS_LINKED)
         if user_input is not None:
             if ma_config_entry_id(self.hass, user_input[CONF_PLAYER]) is None:
                 errors[CONF_PLAYER] = "not_ma_player"
@@ -101,6 +112,7 @@ class SpeldosaOptionsFlow(OptionsFlow):
                         CONF_RESUME_WINDOW: int(user_input[CONF_RESUME_WINDOW]),
                         CONF_START_VOLUME: int(user_input[CONF_START_VOLUME]),
                         CONF_SOLO: bool(user_input[CONF_SOLO]),
+                        CONF_ACCOUNT: user_input.get(CONF_ACCOUNT, options_account),
                     }
                 )
         options = self.config_entry.options
@@ -122,4 +134,20 @@ class SpeldosaOptionsFlow(OptionsFlow):
                 vol.Required(CONF_SOLO, default=options.get(CONF_SOLO, DEFAULT_SOLO)): BooleanSelector(),
             }
         )
+        # Only when a music service has more than one account in Music Assistant (two Spotify family members)
+        accounts = music_accounts(self.hass, current_player)
+        if accounts:
+            as_linked = AS_LINKED_LABEL.get(self.hass.config.language, AS_LINKED_LABEL["en"])
+            choices = [SelectOptionDict(value=ACCOUNT_AS_LINKED, label=as_linked)] + [
+                SelectOptionDict(value=a["id"], label=f"{a['domain'].capitalize()}: {a['name']}") for a in accounts
+            ]
+            if options_account and options_account not in {a["id"] for a in accounts}:
+                choices.append(SelectOptionDict(value=options_account, label=options_account))
+            schema = schema.extend(
+                {
+                    vol.Required(CONF_ACCOUNT, default=options_account): SelectSelector(
+                        SelectSelectorConfig(options=choices, mode=SelectSelectorMode.DROPDOWN)
+                    )
+                }
+            )
         return self.async_show_form(step_id="init", data_schema=schema, errors=errors)

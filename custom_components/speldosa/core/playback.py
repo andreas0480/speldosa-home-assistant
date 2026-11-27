@@ -1,6 +1,6 @@
-"""What happens when a card is put on a box, lifted, or heard to the end: pure decisions, carried out by a connector.
+"""What happens when a tag is put on a box, lifted, or heard to the end: pure decisions, carried out by a connector.
 
-The connector (the Home Assistant controller, later a standalone hub) passes in the card, the box's state, the
+The connector (the Home Assistant controller, later a standalone hub) passes in the tag, the box's state, the
 player's state and the time, and carries out the returned actions in order.
 """
 
@@ -9,15 +9,15 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass, field
 
-from .models import RANDOM_SERIES_MODES, SERIES_MODES, Card, PlayMode, Position, number_order
+from .models import RANDOM_SERIES_MODES, SERIES_MODES, Tag, PlayMode, Position, number_order
 
-# A card lifted and put back within this many seconds continues where it was, whatever its mode.
+# A tag lifted and put back within this many seconds continues where it was, whatever its mode.
 DEFAULT_RESUME_WINDOW_S = 15 * 60
 
 STATUS_IDLE = "idle"
 STATUS_PLAYING = "playing"
 STATUS_PAUSED = "paused"
-STATUS_UNKNOWN_CARD = "unknown_card"
+STATUS_UNKNOWN_TAG = "unknown_tag"
 
 # Heard to the end: the player stopped at the last queue item within this many seconds of its end.
 END_TOLERANCE_S = 20
@@ -28,7 +28,7 @@ class Action:
     """One thing for the connector to do.
 
     kind: "play" (uri, media_type, start_item, shuffle, fresh), "resume", "pause", "seek" (position),
-    "save_position" (uid), "status" (status), "unknown_card" (uid), "series_started" (uid, uri, order, order_pos),
+    "save_position" (uid), "status" (status), "unknown_tag" (uid), "series_started" (uid, uri, order, order_pos),
     "heard" (uid).
     `fresh` is true when a new piece starts (the connector then applies the box's start volume).
     """
@@ -53,7 +53,7 @@ class BoxState:
     active_uid: str | None = None
     paused_uid: str | None = None
     lifted_at: float | None = None
-    # What the speaker was playing when the card was lifted. Pressing play again is only right if the speaker is
+    # What the speaker was playing when the tag was lifted. Pressing play again is only right if the speaker is
     # still paused on that; someone may have played something else in between (found 2026-11-22).
     paused_content: str | None = None
 
@@ -79,37 +79,37 @@ def _play(uri: str, media_type: str | None, *, position: Position | None = None,
     return actions
 
 
-def _episode_type(card: Card) -> str | None:
-    return "album" if card.media_type == "artist" else None
+def _episode_type(tag: Tag) -> str | None:
+    return "album" if tag.media_type == "artist" else None
 
 
-def build_order(card: Card, rng: random.Random) -> list[str]:
+def build_order(tag: Tag, rng: random.Random) -> list[str]:
     """The play order through the included albums or episodes: shuffled, or in number order."""
-    if card.mode in RANDOM_SERIES_MODES:
-        order = card.included()
+    if tag.mode in RANDOM_SERIES_MODES:
+        order = tag.included()
         rng.shuffle(order)
         return order
-    return number_order(card.episodes)
+    return number_order(tag.episodes)
 
 
-def _next_in_series(card: Card, rng: random.Random) -> tuple[str | None, tuple[str, ...], int]:
+def _next_in_series(tag: Tag, rng: random.Random) -> tuple[str | None, tuple[str, ...], int]:
     """The next album or episode, and the order and step it comes from."""
-    included = set(card.included())
-    order = [u for u in card.order if u in included]
-    pos = card.order_pos
+    included = set(tag.included())
+    order = [u for u in tag.order if u in included]
+    pos = tag.order_pos
     if not order or len(order) != len(included):
-        order, pos = build_order(card, rng), 0
+        order, pos = build_order(tag, rng), 0
     if not order:
         return None, (), 0
     if pos >= len(order):
         # The whole series has been heard: a new round, reshuffled for random modes.
-        order = build_order(card, rng) if card.mode in RANDOM_SERIES_MODES else order
+        order = build_order(tag, rng) if tag.mode in RANDOM_SERIES_MODES else order
         pos = 0
     return order[pos], tuple(order), pos
 
 
 def on_placed(
-    card: Card | None,
+    tag: Tag | None,
     uid: str,
     state: BoxState,
     player_state: str | None,
@@ -119,14 +119,14 @@ def on_placed(
     rng: random.Random | None = None,
     player_content: str | None = None,
 ) -> Decision:
-    """A card was put on the box.
+    """A tag was put on the box.
 
     player_content is what the speaker has loaded now (its media content id).
     """
     rng = rng or random.Random()
-    if card is None:
+    if tag is None:
         return Decision(
-            [Action("status", status=STATUS_UNKNOWN_CARD), Action("unknown_card", uid=uid)],
+            [Action("status", status=STATUS_UNKNOWN_TAG), Action("unknown_tag", uid=uid)],
             BoxState(),
         )
     new_state = BoxState(active_uid=uid)
@@ -135,33 +135,33 @@ def on_placed(
         untouched = state.paused_content is not None and player_content == state.paused_content
         if player_state == "paused" and untouched:
             return Decision([Action("resume")] + playing, new_state)
-        if card.position is not None and card.mode not in SERIES_MODES:
-            return Decision(_play(card.uri, card.media_type, position=card.position) + playing, new_state)
+        if tag.position is not None and tag.mode not in SERIES_MODES:
+            return Decision(_play(tag.uri, tag.media_type, position=tag.position) + playing, new_state)
 
-    if card.mode in SERIES_MODES:
-        if card.current is not None:
+    if tag.mode in SERIES_MODES:
+        if tag.current is not None:
             # An album not yet heard to the end continues from where it stopped, however long ago.
-            return Decision(_play(card.current, _episode_type(card), position=card.position) + playing, new_state)
-        episode, order, pos = _next_in_series(card, rng)
+            return Decision(_play(tag.current, _episode_type(tag), position=tag.position) + playing, new_state)
+        episode, order, pos = _next_in_series(tag, rng)
         if episode is None:
             # No albums chosen or fetched yet: shuffling the whole series is the nearest thing.
-            return Decision(_play(card.uri, card.media_type, shuffle=True) + playing, new_state)
+            return Decision(_play(tag.uri, tag.media_type, shuffle=True) + playing, new_state)
         actions = [Action("series_started", uid=uid, uri=episode, order=order, order_pos=pos)]
-        return Decision(actions + _play(episode, _episode_type(card)) + playing, new_state)
+        return Decision(actions + _play(episode, _episode_type(tag)) + playing, new_state)
 
-    if card.mode is PlayMode.SHUFFLE:
-        actions = _play(card.uri, card.media_type, shuffle=True)
-    elif card.mode is PlayMode.RESUME:
-        actions = _play(card.uri, card.media_type, position=card.position)
+    if tag.mode is PlayMode.SHUFFLE:
+        actions = _play(tag.uri, tag.media_type, shuffle=True)
+    elif tag.mode is PlayMode.RESUME:
+        actions = _play(tag.uri, tag.media_type, position=tag.position)
     else:
-        actions = _play(card.uri, card.media_type)
+        actions = _play(tag.uri, tag.media_type)
     return Decision(actions + playing, new_state)
 
 
 def on_lifted(
     state: BoxState, player_state: str | None, now: float, player_content: str | None = None
 ) -> Decision:
-    """The card was lifted off the box. player_content is what the speaker has loaded (its media content id)."""
+    """The tag was lifted off the box. player_content is what the speaker has loaded (its media content id)."""
     uid = state.active_uid
     if uid is None or player_state not in ("playing", "paused"):
         return Decision([Action("status", status=STATUS_IDLE)], BoxState())
@@ -191,27 +191,27 @@ def is_finished(queue: dict | None, last_position: float | None, last_duration: 
     return last_duration - last_position <= END_TOLERANCE_S
 
 
-def on_finished(card: Card | None) -> Decision:
-    """The card's album, episode or audiobook was heard to the end while it lay on the box."""
-    if card is None:
+def on_finished(tag: Tag | None) -> Decision:
+    """The tag's album, episode or audiobook was heard to the end while it lay on the box."""
+    if tag is None:
         return Decision([Action("status", status=STATUS_IDLE)])
-    return Decision([Action("heard", uid=card.uid), Action("status", status=STATUS_IDLE)])
+    return Decision([Action("heard", uid=tag.uid), Action("status", status=STATUS_IDLE)])
 
 
-def apply_heard(card: Card) -> None:
-    """Move a card on after its piece was heard to the end."""
-    if card.mode in SERIES_MODES:
-        card.current = None
-        card.order_pos += 1
-        card.heard += 1
-    card.position = None
+def apply_heard(tag: Tag) -> None:
+    """Move a tag on after its piece was heard to the end."""
+    if tag.mode in SERIES_MODES:
+        tag.current = None
+        tag.order_pos += 1
+        tag.heard += 1
+    tag.position = None
 
 
-def apply_series_started(card: Card, uri: str, order: tuple[str, ...], order_pos: int) -> None:
-    card.order = list(order)
-    card.order_pos = order_pos
-    card.current = uri
-    card.position = None
+def apply_series_started(tag: Tag, uri: str, order: tuple[str, ...], order_pos: int) -> None:
+    tag.order = list(order)
+    tag.order_pos = order_pos
+    tag.current = uri
+    tag.position = None
 
 
 def position_from_queue(queue: dict | None, now: float) -> Position | None:

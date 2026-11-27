@@ -3,19 +3,19 @@
 # The platform package defines the chip, the logger, Bluetooth setup if any, and the light with id ring.
 #
 # Entities Home Assistant sees (the Speldosa integration finds them by these names):
-#   sensor  "Card"    UID of the card on the box, or "none"
-#   select  "Status"  set by Home Assistant: idle, playing, paused, unknown_card, error
+#   sensor  "Tag"    UID of the tag on the box, or "none"
+#   select  "Status"  set by Home Assistant: idle, playing, paused, unknown_tag, error
 #   number  "Lift delay", "Light brightness"; switch "Sounds"; update "Firmware"
 #   diagnostic: "Wi-Fi signal", "Uptime", "Reset reason"
 #
-# Light and sound (decided 2026-11-19): steady green when the box is ready and empty, steady yellow while a card
-# is on it (half brightness when Home Assistant says paused), a sound when a card goes on and another when it is
+# Light and sound (decided 2026-11-19): steady green when the box is ready and empty, steady yellow while a tag
+# is on it (half brightness when Home Assistant says paused), a sound when a tag goes on and another when it is
 # lifted. Pulses and blinks are kept for faults, so paused is dimmer, not pulsing (orange pulse = no Wi-Fi).
 # Faults keep their pulses and blinks: orange no Wi-Fi, blue no Home Assistant, red reader or error, pink
-# unknown card. The buzzer package provides sound_card_on, sound_card_off and sound_unknown.
+# unknown tag. The buzzer package provides sound_tag_on, sound_tag_off and sound_unknown.
 
 substitutions:
-  version: "0.1.0"
+  version: "0.2.0"
   update_url: "https://speldosa.se/firmware/${board_id}/manifest.json"
 
 esphome:
@@ -34,7 +34,7 @@ esphome:
             id: booted
             value: "true"
         - lambda: |-
-            if (id(current_uid).empty()) id(card).publish_state("none");
+            if (id(current_uid).empty()) id(tag_sensor).publish_state("none");
         - script.execute: show_status
     # After every component is set up: a reader that failed shows as a problem in HA and on the light.
     - priority: -200
@@ -64,7 +64,7 @@ update:
     source: ${update_url}
 
 # No Wi-Fi network and no open fallback hotspot in the image. Wi-Fi is set over USB (Improv serial,
-# from the installer page) or, on the ESP32-C6, over Bluetooth (Improv BLE, authorised by a card on the box).
+# from the installer page) or, on the ESP32-C6, over Bluetooth (Improv BLE, authorised by a tag on the box).
 # Power saving off: with it on (and Bluetooth Improv running), HA timed out connecting to the breadboard box
 # while its outbound traffic worked; the phase 1 green box always ran with NONE (2026-11-17). USB powered.
 wifi:
@@ -118,8 +118,8 @@ text_sensor:
       name: Reset reason
       entity_category: diagnostic
   - platform: template
-    id: card
-    name: Card
+    id: tag_sensor
+    name: Tag
     icon: mdi:nfc-variant
     update_interval: never
     lambda: |-
@@ -127,8 +127,8 @@ text_sensor:
 
 binary_sensor:
   - platform: template
-    id: card_present
-    name: Card present
+    id: tag_present
+    name: Tag present
     internal: true
   # On when the reader failed at boot. Unplugging the box for a few seconds is the fix on phase 2.
   - platform: template
@@ -147,7 +147,7 @@ select:
       - idle
       - playing
       - paused
-      - unknown_card
+      - unknown_tag
       - error
     initial_option: idle
     on_value:
@@ -191,62 +191,62 @@ switch:
     restore_mode: RESTORE_DEFAULT_ON
 
 script:
-  # A card was seen by the reader. Cancels a pending lift, publishes only a change.
-  - id: card_seen
+  # A tag was seen by the reader. Cancels a pending lift, publishes only a change.
+  - id: tag_seen
     mode: queued
     parameters:
       uid: std::string
     then:
       - if:
           condition:
-            script.is_running: card_lift
+            script.is_running: tag_lift
           then:
-            - lambda: 'ESP_LOGI("speldosa", "card back after %u ms, lift cancelled", (unsigned) (millis() - id(lost_at)));'
-      - script.stop: card_lift
+            - lambda: 'ESP_LOGI("speldosa", "tag back after %u ms, lift cancelled", (unsigned) (millis() - id(lost_at)));'
+      - script.stop: tag_lift
       - if:
           condition:
             lambda: return id(current_uid) != uid;
           then:
             - lambda: |-
-                ESP_LOGI("speldosa", "card on: %s", uid.c_str());
+                ESP_LOGI("speldosa", "tag on: %s", uid.c_str());
                 id(current_uid) = uid;
-                id(card).publish_state(uid);
-                id(card_present).publish_state(true);
-            - script.execute: signal_card
+                id(tag_sensor).publish_state(uid);
+                id(tag_present).publish_state(true);
+            - script.execute: signal_tag
 
-  # The reader lost the card. It counts as lifted only after the lift delay.
-  - id: card_lost
+  # The reader lost the tag. It counts as lifted only after the lift delay.
+  - id: tag_lost
     then:
       - lambda: |-
           id(lost_at) = millis();
-          ESP_LOGD("speldosa", "reader lost the card");
-      - script.execute: card_lift
+          ESP_LOGD("speldosa", "reader lost the tag");
+      - script.execute: tag_lift
 
-  - id: card_lift
+  - id: tag_lift
     mode: restart
     then:
       - delay: !lambda return (uint32_t) (id(lift_delay).state * 1000);
       - lambda: |-
-          ESP_LOGI("speldosa", "card lifted: %u ms after the reader lost it", (unsigned) (millis() - id(lost_at)));
+          ESP_LOGI("speldosa", "tag lifted: %u ms after the reader lost it", (unsigned) (millis() - id(lost_at)));
           id(current_uid) = "";
-          id(card).publish_state("none");
-          id(card_present).publish_state(false);
+          id(tag_sensor).publish_state("none");
+          id(tag_present).publish_state(false);
       - if:
           condition:
             switch.is_on: sounds
           then:
-            - script.execute: sound_card_off
+            - script.execute: sound_tag_off
       - script.execute: show_status
 
-  # A card went on: its sound, and the light turns to the card colour (show_status).
-  - id: signal_card
+  # A tag went on: its sound, and the light turns to the tag colour (show_status).
+  - id: signal_tag
     mode: restart
     then:
       - if:
           condition:
             switch.is_on: sounds
           then:
-            - script.execute: sound_card_on
+            - script.execute: sound_tag_on
       - script.execute: show_status
 
   # The light shows the most urgent state: setup, no Home Assistant, then what Home Assistant set.
@@ -264,14 +264,14 @@ script:
           } else if (!api::global_api_server->is_connected()) {
             call.set_rgb(0.0, 0.3, 1.0); call.set_brightness(b); call.set_effect("Pulse");
           } else {
-            // Normal operation: steady green and empty, steady yellow with a card on, yellow at half
+            // Normal operation: steady green and empty, steady yellow with a tag on, yellow at half
             // brightness when Home Assistant says paused (decided 2026-11-19).
             auto s = id(status).current_option();
-            if (s == "unknown_card") {
+            if (s == "unknown_tag") {
               call.set_rgb(1.0, 0.0, 0.6); call.set_brightness(b); call.set_effect("Blink");
             } else if (s == "error") {
               call.set_rgb(1.0, 0.0, 0.0); call.set_brightness(b); call.set_effect("Blink");
-            } else if (id(card_present).state) {
+            } else if (id(tag_present).state) {
               call.set_rgb(1.0, 0.75, 0.0); call.set_brightness(s == "paused" ? b * 0.5f : b);
               call.set_effect("None");
               call.set_transition_length(250);
@@ -283,6 +283,6 @@ script:
           call.perform();
       - if:
           condition:
-            lambda: 'return id(status).current_option() == std::string("unknown_card") && id(sounds).state;'
+            lambda: 'return id(status).current_option() == std::string("unknown_tag") && id(sounds).state;'
           then:
             - script.execute: sound_unknown

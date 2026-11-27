@@ -6,7 +6,7 @@ pn7160_i2c:
   tag_ttl: 250ms
   on_tag:
     - script.execute:
-        id: card_seen
+        id: tag_seen
         uid: !lambda return x;
   on_tag_removed:
-    - script.execute: card_lost
+    - script.execute: tag_lost

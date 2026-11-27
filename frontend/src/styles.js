@@ -28,12 +28,12 @@ export const styles = css`
   .toolbar .aside { color: var(--secondary-text-color, #727272); white-space: nowrap; }
   .content { padding: 16px; display: flex; flex-direction: column; gap: 16px; max-width: 1040px;
     box-sizing: border-box; margin: 0 auto; }
-  .card { display: block; background: var(--ha-card-background, var(--card-background-color, #fff));
+  .tag { display: block; background: var(--ha-card-background, var(--card-background-color, #fff));
     border: 1px solid var(--divider-color, #e0e0e0); border-radius: var(--ha-card-border-radius, 12px);
     color: var(--primary-text-color); }
-  .card-title { padding: 16px 16px 8px; font-size: 20px; line-height: 28px; display: flex;
+  .tag-title { padding: 16px 16px 8px; font-size: 20px; line-height: 28px; display: flex;
     align-items: baseline; gap: 12px; flex-wrap: wrap; }
-  .card-title .hint, .secondary { color: var(--secondary-text-color, #727272); font-size: 14px; }
+  .tag-title .hint, .secondary { color: var(--secondary-text-color, #727272); font-size: 14px; }
   .banner { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.12); border-radius: 12px;
     padding: 16px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
   .banner .text { flex: 1 1 320px; min-width: 0; }
@@ -95,7 +95,7 @@ export const styles = css`
   .result .cover { border-radius: 8px; }
   .result.line { flex-direction: row; align-items: center; gap: 12px; border: 0; border-radius: 8px; padding: 8px; }
   .result.line[aria-pressed="true"] { padding: 6px; }
-  .side .card { overflow: hidden; }
+  .side .tag { overflow: hidden; }
   .side .inner { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
   .side .hero { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block;
     background: var(--secondary-background-color, #eceff1); }
@@ -117,7 +117,7 @@ export const styles = css`
     padding: 12px 20px; border-radius: 8px; z-index: 10; max-width: calc(100% - 32px); }
   .error { color: var(--error-color, #db4437); }
   svg.icon { width: 24px; height: 24px; fill: currentColor; flex: 0 0 auto; }
-  .card-id {
+  .tag-id {
     font-family: var(--code-font-family, monospace);
     font-size: 0.85em;
   }

@@ -1,7 +1,8 @@
 # Speldosa setup guide
 
-Speldosa is a music box for children. Put a card on the box and the music, story or audiobook linked to it plays
-on a speaker in the room. Lift the card and it pauses. Put it back and it continues.
+Speldosa is a music box for children. Put a tag on the box and the music, story or audiobook linked to it plays
+on a speaker in the room. Lift the tag and it pauses. Put it back and it continues. A tag is anything with an NFC
+chip in it: a card, a coin or a sticker.
 
 On svenska: [setup-guide.sv.md](setup-guide.sv.md).
 
@@ -71,16 +72,16 @@ The light pulses orange while the box has no Wi-Fi and pulses blue while it wait
 
 A **Speldosa** page appears in the sidebar.
 
-## 4. Link the cards
+## 4. Link the tags
 
-1. Put a new card on the box and leave it there. The light blinks pink and the box gives two short sounds:
-   the card has no music yet.
-2. Open **Speldosa** in the sidebar. A blue banner says a new card is on the box. Select **Link this card**.
-3. Type what the card should play, for example "Bamse" or "Die drei ???". The results come from your music
+1. Put a new tag on the box and leave it there. The light blinks pink and the box gives two short sounds:
+   the tag has no music yet.
+2. Open **Speldosa** in the sidebar. A blue banner says a new tag is on the box. Select **Link this tag**.
+3. Type what the tag should play, for example "Bamse" or "Die drei ???". The results come from your music
    service. If nothing comes back, Spotify may be busy: wait half a minute and try again.
-4. Pick a result. On the right, choose how it plays (below) and select **Link card**. It starts playing.
+4. Pick a result. On the right, choose how it plays (below) and select **Link tag**. It starts playing.
 
-Repeat for each card.
+Repeat for each tag.
 
 ## Play choices
 
@@ -96,27 +97,41 @@ Repeat for each card.
 For the two album choices the page lists the artist's albums. Advent calendars, soundtracks, minis and similar are
 unticked, and when most albums carry an episode number, only numbered ones are ticked. Tick or untick as you like.
 
-Lifted halfway through, an album continues from that spot when the card comes back, however much later. The card
+Lifted halfway through, an album continues from that spot when the tag comes back, however much later. The tag
 moves on to a new album only when the album has been heard to the end.
 
 ## Lifting and putting back
 
-- Lift the card: the music pauses.
-- Put it back within 15 minutes: it continues where it was, whatever the card's choice.
-- After that the card's choice decides, as in the table above.
+- Lift the tag: the music pauses.
+- Put it back within 15 minutes: it continues where it was, whatever the tag's choice.
+- After that the tag's choice decides, as in the table above.
 
-The 15 minutes, the start volume (40 %) and whether the box leaves a speaker group first are set per box under
-Settings, Devices and services, Speldosa, **Configure**.
+The 15 minutes, the start volume (40 %), whether the box leaves a speaker group first and the music account
+(below) are set per box under Settings, Devices and services, Speldosa, **Configure**.
+
+## Two boxes playing at the same time
+
+A Spotify account plays one thing at a time, so with one account the second box stops the first. With a Spotify
+Premium Family plan, each family member has an account of their own at no extra cost. Give each box its own:
+
+1. In Music Assistant: Settings, Music sources, **Add a music source**, Spotify, and sign in with the second
+   family member's account. Music Assistant now has two Spotify accounts.
+2. In Home Assistant: Settings, Devices and services, Speldosa, **Configure** on one box. **Music account**
+   appears once Music Assistant has two accounts of the same service. Pick the account for this box.
+3. Do the same on the other box with the other account.
+
+The tags stay shared: any tag plays on any box, through that box's account. Leave **Music account** at its
+first choice to play each tag through the account it was linked with.
 
 ## Light and sound
 
 | Light | Meaning |
 |---|---|
-| Steady green | Ready, no card on it |
-| Steady yellow | A card is on it and playing |
+| Steady green | Ready, no tag on it |
+| Steady yellow | A tag is on it and playing |
 | Yellow, half bright | Paused |
-| Short white flash | A card was read |
-| Pink blink, two sounds | The card has no music yet: link it on the Speldosa page |
+| Short white flash | A tag was read |
+| Pink blink, two sounds | The tag has no music yet: link it on the Speldosa page |
 | Orange pulse | No Wi-Fi |
 | Blue pulse | No connection to Home Assistant |
 | Red blink | Something went wrong: Home Assistant shows a notification with the reason |
@@ -133,7 +148,8 @@ Settings, Devices and services, Speldosa, **Configure**.
 | Red blink and "could not play" | The notification says why. Common causes: the speaker is off, or the music service is playing on another speaker. Spotify plays on one speaker at a time |
 | Red blink and "Reader problem" on the page | Unplug the box for a few seconds and plug it back in |
 | Search is slow or finds nothing | Spotify is limiting Music Assistant's searches ("rate limit"; Music Assistant's log says "Spotify Rate Limiter" or "asked to wait ... seconds"). Wait a minute and search again. For good: create your own free Spotify developer app and enter its Client ID in Music Assistant, Settings, Providers, Spotify; with the shared default ID the limit is reached quickly. This fixed it on our own setup (2026-11-26) |
-| The card plays the wrong thing | Speldosa page, the card, **Change** |
+| The tag plays the wrong thing | Speldosa page, the tag, **Change** |
+| One box stops when the other starts | Both play through the same Spotify account. Give each box its own (Two boxes playing at the same time) |
 
 ## Updates
 
